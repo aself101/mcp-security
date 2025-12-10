@@ -1,8 +1,10 @@
-// src/security/layers/layer5-contextual.js
-// User-configurable contextual validation layer
-// Handles complex scenarios without bloating core framework
+/**
+ * @fileoverview Layer 5 - User-configurable contextual validation layer.
+ * Handles complex scenarios without bloating core framework.
+ */
 
 import { ValidationLayer } from './validation-layer-base.js';
+import { ContextualConfigBuilder } from './contextual-config-builder.js';
 
 export default class ContextualValidationLayer extends ValidationLayer {
     constructor(options = {}) {
@@ -340,51 +342,39 @@ export default class ContextualValidationLayer extends ValidationLayer {
     }
 }
 
-// Configuration helpers for common use cases
-export class ContextualConfigBuilder {
-    constructor() {
-        this.config = {};
-    }
+// Re-export ContextualConfigBuilder for convenience
+export { ContextualConfigBuilder };
 
-    enableOAuthValidation(allowedDomains = []) {
-        this.config.oauthValidation = {
-            enabled: true,
-            allowedDomains,
-            blockDangerousSchemes: true
-        };
-        return this;
-    }
-
-    enableRateLimiting(limit = 10, windowMs = 60000) {
-        this.config.rateLimiting = {
-            enabled: true,
-            limit,
-            windowMs
-        };
-        return this;
-    }
-
-    enableResponseValidation(options = {}) {
-        this.config.responseValidation = {
-            enabled: true,
-            blockSensitiveData: true,
-            ...options
-        };
-        return this;
-    }
-
-    build() {
-        return this.config;
-    }
-}
-
-// Export convenience function
+/**
+ * Factory function to create a Layer 5 contextual validation layer with sensible defaults.
+ * Creates a pre-configured layer with rate limiting enabled (20 req/min).
+ *
+ * @param {Object} customConfig - Custom configuration to merge with defaults
+ * @param {boolean} [customConfig.enabled=true] - Enable the layer
+ * @param {Object} [customConfig.oauthValidation] - OAuth URL validation config
+ * @param {Object} [customConfig.domainRestrictions] - Domain blocklist/allowlist config
+ * @param {Object} [customConfig.rateLimiting] - Per-method rate limiting config
+ * @param {Object} [customConfig.responseValidation] - Response content validation config
+ * @returns {ContextualValidationLayer} Configured contextual validation layer
+ *
+ * @example
+ * // Create with defaults (rate limiting: 20 req/min)
+ * const layer = createContextualLayer();
+ *
+ * @example
+ * // Create with custom config
+ * const layer = createContextualLayer({
+ *   domainRestrictions: {
+ *     enabled: true,
+ *     blockedDomains: ['evil.com']
+ *   }
+ * });
+ */
 export function createContextualLayer(customConfig = {}) {
     const builder = new ContextualConfigBuilder();
-    
-    // Example configuration
+
     const defaultConfig = builder
-        .enableRateLimiting(20, 60000)  // 20 req/min
+        .enableRateLimiting(20, 60000)
         .build();
 
     return new ContextualValidationLayer({

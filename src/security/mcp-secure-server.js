@@ -16,6 +16,7 @@ import { defaultToolRegistry, defaultResourcePolicy } from "./utils/tool-registr
 import { ErrorSanitizer } from "./utils/error-sanitizer.js";
 import { SecureTransport } from "./transport/index.js";
 import { SecurityLogger } from "./utils/security-logger.js";
+import { normalizeRequest } from "./utils/request-normalizer.js";
 
 /**
  * Unified secure MCP server with built-in transport-level security validation.
@@ -200,7 +201,7 @@ class SecureMcpServer {
     _wrapTransport(transport) {
         const validator = async (message, context) => {
             const startTime = this._options.logPerformanceMetrics ? performance.now() : 0;
-            const normalizedMessage = this._normalizeRequest(message);
+            const normalizedMessage = normalizeRequest(message);
 
             // Optional logging
             if (this._securityLogger) {
@@ -249,59 +250,6 @@ class SecureMcpServer {
         return new SecureTransport(transport, validator, {
             errorSanitizer: this._errorSanitizer
         });
-    }
-
-    // ==================== Request Normalization ====================
-
-    /**
-     * Normalize different request formats into consistent structure
-     * Handles: JSON-RPC messages, SDK request objects, HTTP requests
-     */
-    _normalizeRequest(request) {
-        // Case 1: Already a JSON-RPC message
-        if (request.jsonrpc && request.method) {
-            return request;
-        }
-
-        // Case 2: Official SDK request object (CallToolRequest, etc.)
-        if (request.method && request.params) {
-            return {
-                jsonrpc: "2.0",
-                method: this._mapSdkMethod(request.method, request.params),
-                params: request.params,
-                id: request.id || Math.random().toString(36)
-            };
-        }
-
-        // Case 3: HTTP request body
-        if (request.body && typeof request.body === 'object') {
-            return request.body;
-        }
-
-        // Case 4: Raw object - convert to JSON-RPC format
-        return {
-            jsonrpc: "2.0",
-            method: request.method || "unknown",
-            params: request.params || request,
-            id: request.id || Math.random().toString(36)
-        };
-    }
-
-    /**
-     * Map SDK-specific request types to MCP methods
-     */
-    _mapSdkMethod(method, _params) {
-        const methodMap = {
-            'tools/call': 'tools/call',
-            'tools/list': 'tools/list',
-            'resources/read': 'resources/read',
-            'resources/list': 'resources/list',
-            'prompts/get': 'prompts/get',
-            'prompts/list': 'prompts/list',
-            'initialize': 'initialize',
-            'ping': 'ping'
-        };
-        return methodMap[method] || method;
     }
 
     _trackRequest(message) {

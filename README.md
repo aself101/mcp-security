@@ -137,7 +137,7 @@ import {
 Run the included test server to see the framework in action:
 
 ```bash
-npm run minimal-server
+npm start
 ```
 
 The test server includes 7 tools protected by the security framework:
@@ -212,9 +212,9 @@ const server = new SecureMcpServer(
     logPerformanceMetrics: false,   // Timing statistics
     logLevel: 'info',               // Log level when logging enabled
 
-    // Layer 4 Configuration
-    toolRegistry: [...],            // Custom tool registry
-    resourcePolicy: {...},          // Custom resource policy
+    // Layer 4 Configuration (see "Layer 4: Tool Registry" section below)
+    toolRegistry: [...],            // Tool constraints, quotas, side effects
+    resourcePolicy: {...},          // Filesystem access controls
     maxSessions: 5000,              // Maximum concurrent sessions
     sessionTtlMs: 30 * 60_000,      // Session TTL (30 minutes)
 
@@ -344,6 +344,81 @@ To use only the first 4 layers:
 const server = new SecureMcpServer(
   { name: 'my-server', version: '1.0.0' },
   { contextual: { enabled: false } }
+);
+```
+
+### Layer 4: Tool Registry and Resource Policy
+
+Layer 4 (Semantic Validation) enforces tool contracts and resource access policies. By default, it uses a permissive configuration, but you can define custom policies for your tools.
+
+#### Tool Registry
+
+The tool registry defines constraints for each tool, including quotas, argument limits, and side effect declarations:
+
+```javascript
+const server = new SecureMcpServer(
+  { name: 'my-server', version: '1.0.0' },
+  {
+    toolRegistry: [
+      {
+        name: 'my-database-tool',      // Tool name (must match registered tool)
+        sideEffects: 'write',          // 'none' | 'read' | 'write' | 'network'
+        maxArgsSize: 5000,             // Max argument payload size in bytes
+        maxEgressBytes: 100000,        // Max response size in bytes
+        quotaPerMinute: 30,            // Rate limit per minute
+        quotaPerHour: 500,             // Rate limit per hour
+        argsShape: {                   // Expected argument schema
+          query: { type: 'string' },
+          limit: { type: 'number' }
+        }
+      },
+      {
+        name: 'my-readonly-tool',
+        sideEffects: 'read',
+        maxArgsSize: 2000,
+        maxEgressBytes: 50000,
+        quotaPerMinute: 60,
+        quotaPerHour: 1000,
+        argsShape: {
+          id: { type: 'string' }
+        }
+      }
+    ]
+  }
+);
+```
+
+**Side Effects Declaration:**
+- `'none'` - Pure computation, no external effects
+- `'read'` - Reads from filesystem or external sources
+- `'write'` - Modifies state (filesystem, database, etc.)
+- `'network'` - Makes network requests
+
+Tools not in the registry use permissive defaults. Define entries for tools requiring specific constraints.
+
+#### Resource Policy
+
+The resource policy controls access to filesystem resources:
+
+```javascript
+const server = new SecureMcpServer(
+  { name: 'my-server', version: '1.0.0' },
+  {
+    resourcePolicy: {
+      allowedSchemes: ['file'],        // Allowed URI schemes
+      rootDirs: ['./data', './public'], // Allowed root directories
+      denyGlobs: [                     // Blocked path patterns
+        '/etc/**',
+        '**/*.key',
+        '**/*.pem',
+        '**/.env',
+        '**/node_modules/**'
+      ],
+      maxPathLength: 4096,             // Max path length
+      maxUriLength: 2048,              // Max URI length
+      maxReadBytes: 2000000            // Max file read size (2MB)
+    }
+  }
 );
 ```
 

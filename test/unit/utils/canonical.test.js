@@ -68,7 +68,7 @@ describe('URL Decoding Edge Cases', () => {
     const input = '%25252525252525';
     const result = decodeUrlsCanonical(input, 3);
 
-    expect(typeof result).toBe('string');
+    expect(result).toBeTypeOf('string');
     expect(result.length).toBeGreaterThan(0);
   });
 
@@ -80,7 +80,7 @@ describe('URL Decoding Edge Cases', () => {
     // The valid %2e should decode to '.'
     // Malformed sequences should be preserved
     expect(result).toContain('.');
-    expect(typeof result).toBe('string');
+    expect(result).toBeTypeOf('string');
   });
 
   it('handles mixed case percent encoding', () => {
@@ -119,8 +119,8 @@ describe('Integration Flow', () => {
     const resultNull = canonicalizeFromMessage(null);
     const resultUndefined = canonicalizeFromMessage(undefined);
 
-    expect(typeof resultNull).toBe('string');
-    expect(typeof resultUndefined).toBe('string');
+    expect(resultNull).toBeTypeOf('string');
+    expect(resultUndefined).toBeTypeOf('string');
   });
 });
 
@@ -132,7 +132,7 @@ describe('Performance and Safety', () => {
     const result = canonicalizeString(largeInput);
     const duration = performance.now() - start;
 
-    expect(typeof result).toBe('string');
+    expect(result).toBeTypeOf('string');
     expect(result.length).toBeGreaterThan(0);
     expect(duration).toBeLessThan(1000); // Should complete in under 1 second
   });
@@ -146,7 +146,7 @@ describe('Performance and Safety', () => {
 
     const result = decodeUrlsCanonical(nested);
 
-    expect(typeof result).toBe('string');
+    expect(result).toBeTypeOf('string');
     expect(result.length).toBeGreaterThan(0);
     // Should have made progress even if not fully decoded
   });
@@ -167,7 +167,7 @@ describe('Real Attack Patterns', () => {
     const result = canonicalizeString(input);
 
     // Cyrillic characters should be normalized to Latin
-    expect(typeof result).toBe('string');
+    expect(result).toBeTypeOf('string');
     expect(result).toContain('..');
     expect(result).toContain('p'); // Cyrillic р → Latin p
   });

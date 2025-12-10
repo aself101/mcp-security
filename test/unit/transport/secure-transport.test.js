@@ -51,9 +51,9 @@ describe('SecureTransport', () => {
         });
 
         it('sets up transport callbacks', () => {
-            expect(typeof mockTransport.onmessage).toBe('function');
-            expect(typeof mockTransport.onerror).toBe('function');
-            expect(typeof mockTransport.onclose).toBe('function');
+            expect(mockTransport.onmessage).toBeTypeOf('function');
+            expect(mockTransport.onerror).toBeTypeOf('function');
+            expect(mockTransport.onclose).toBeTypeOf('function');
         });
     });
 

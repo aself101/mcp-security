@@ -4,8 +4,12 @@
   "description": "MCP Security Framework - Universal security-by-default middleware for MCP servers",
   "type": "module",
   "main": "./src/index.js",
+  "types": "./src/index.d.ts",
   "exports": {
-    ".": "./src/index.js",
+    ".": {
+      "types": "./src/index.d.ts",
+      "default": "./src/index.js"
+    },
     "./server": "./src/security/mcp-secure-server.js",
     "./transport": "./src/security/transport/index.js"
   },
