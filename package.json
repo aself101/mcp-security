@@ -1,7 +1,7 @@
 {
-  "name": "mcp-security-framework",
+  "name": "mcp-security",
   "version": "0.9.0",
-  "description": "MCP Security Framework - Universal security-by-default middleware for MCP servers",
+  "description": "MCP Security - Universal security-by-default middleware for MCP servers",
   "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/types/index.d.ts",
@@ -40,7 +40,7 @@
     "framework",
     "middleware"
   ],
-  "author": "MCP Security Framework",
+  "author": "MCP Security",
   "license": "MIT",
   "engines": {
     "node": ">=18.0.0"

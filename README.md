@@ -1,8 +1,8 @@
 # MCP Security Framework
 
-[![npm version](https://img.shields.io/npm/v/mcp-security-framework.svg)](https://www.npmjs.com/package/mcp-security-framework)
+[![npm version](https://img.shields.io/npm/v/mcp-security.svg)](https://www.npmjs.com/package/mcp-security)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
-[![Node.js Version](https://img.shields.io/node/v/mcp-security-framework)](https://nodejs.org)
+[![Node.js Version](https://img.shields.io/node/v/mcp-security)](https://nodejs.org)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.0+-blue.svg)](https://www.typescriptlang.org/)
 [![Tests](https://img.shields.io/badge/tests-639%20passing-brightgreen)](test/)
 [![Coverage](https://img.shields.io/badge/coverage-89%25-brightgreen)](test/)
@@ -16,13 +16,13 @@ This framework implements defense-in-depth security with zero configuration requ
 ### Installation
 
 ```bash
-npm install mcp-security-framework
+npm install mcp-security
 ```
 
 ### Basic Usage
 
 ```typescript
-import { SecureMcpServer } from 'mcp-security-framework';
+import { SecureMcpServer } from 'mcp-security';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
 import { z } from 'zod';
 
@@ -273,18 +273,18 @@ Custom validators, domain restrictions, and response filtering. Fully extensible
 
 ```bash
 # Install in your project
-npm install mcp-security-framework
+npm install mcp-security
 
 # Or install globally
-npm install -g mcp-security-framework
+npm install -g mcp-security
 ```
 
 ### From Source
 
 ```bash
 # Clone the repository
-git clone https://github.com/yourusername/mcp-security-framework.git
-cd mcp-security-framework
+git clone https://github.com/yourusername/mcp-security.git
+cd mcp-security
 
 # Install dependencies
 npm install
@@ -328,13 +328,13 @@ import {
   ToolSpec,
   ResourcePolicy,
   ValidationContext
-} from 'mcp-security-framework';
+} from 'mcp-security';
 ```
 
 ### Type-Safe Configuration
 
 ```typescript
-import { SecureMcpServer, SecurityOptions } from 'mcp-security-framework';
+import { SecureMcpServer, SecurityOptions } from 'mcp-security';
 
 const options: SecurityOptions = {
   maxMessageSize: 50000,
@@ -470,7 +470,7 @@ const server = new SecureMcpServer(
 Drop-in replacement for McpServer with built-in 5-layer security.
 
 ```typescript
-import { SecureMcpServer } from 'mcp-security-framework';
+import { SecureMcpServer } from 'mcp-security';
 
 const server = new SecureMcpServer(serverInfo, options);
 ```
@@ -527,7 +527,7 @@ server.validationPipeline;  // Access validation pipeline
 Low-level transport wrapper for custom implementations.
 
 ```typescript
-import { SecureTransport } from 'mcp-security-framework';
+import { SecureTransport } from 'mcp-security';
 
 const secureTransport = new SecureTransport(
   transport,       // Original transport
@@ -547,7 +547,7 @@ import {
   ContextualValidationLayer,  // Layer 5 class
   ContextualConfigBuilder,    // Builder for Layer 5 config
   createContextualLayer       // Factory for Layer 5
-} from 'mcp-security-framework';
+} from 'mcp-security';
 ```
 
 | Export | Description |
@@ -565,7 +565,7 @@ Layer 5 is enabled by default. You can add custom validators at runtime for appl
 ### Adding Custom Validators
 
 ```typescript
-import { SecureMcpServer } from 'mcp-security-framework';
+import { SecureMcpServer } from 'mcp-security';
 
 const server = new SecureMcpServer(
   { name: 'my-server', version: '1.0.0' },
@@ -784,7 +784,7 @@ When validation fails, the framework returns a JSON-RPC error:
 ### Type Guards for Error Handling
 
 ```typescript
-import { isError, getErrorMessage, isSeverity } from 'mcp-security-framework';
+import { isError, getErrorMessage, isSeverity } from 'mcp-security';
 
 try {
   await server.connect(transport);
@@ -842,7 +842,7 @@ Add to Claude Desktop:
     "secure-test": {
       "command": "npx",
       "args": ["tsx", "test-server/minimal-test-server.ts"],
-      "cwd": "/path/to/mcp-security-framework"
+      "cwd": "/path/to/mcp-security"
     }
   }
 }
