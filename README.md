@@ -4,8 +4,8 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Node.js Version](https://img.shields.io/node/v/mcp-security)](https://nodejs.org)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.0+-blue.svg)](https://www.typescriptlang.org/)
-[![Tests](https://img.shields.io/badge/tests-639%20passing-brightgreen)](test/)
-[![Coverage](https://img.shields.io/badge/coverage-89%25-brightgreen)](test/)
+[![Tests](https://img.shields.io/badge/tests-707%20passing-brightgreen)](test/)
+[![Coverage](https://img.shields.io/badge/coverage-86%25-brightgreen)](test/)
 
 A universal security-by-default middleware for Model Context Protocol (MCP) servers. Provides multi-layered defense against traditional attacks and AI-driven threats through a 5-layer validation pipeline. Works like `helmet` for Express - wrapping any MCP server with comprehensive security validation.
 
@@ -86,7 +86,7 @@ The MCP Security Framework acts as a universal wrapper for any MCP server, provi
 - **Zero Configuration** - Security enabled by default with sensible defaults
 - **Universal Compatibility** - Works with any MCP server using @modelcontextprotocol/sdk
 - **Extensible Layer 5** - Add custom validators, domain restrictions, OAuth validation
-- **Production Ready** - Pen-tested with 639 tests and 89% coverage
+- **Production Ready** - Pen-tested with 707 tests and 86% coverage
 - **Opt-in Logging** - Quiet by default for production use
 - **Performance Optimized** - Content caching and efficient pattern detection
 - **Full TypeScript Support** - Complete type definitions with strict mode
@@ -869,8 +869,8 @@ npm run test:coverage
 ```
 
 **Test Coverage:**
-- Overall: 89% lines, 90% branches
-- 639 comprehensive tests
+- Overall: 86% lines, 86% branches
+- 707 comprehensive tests
 - Mutation tests for severity levels
 - Boundary value tests for limits
 - Real attack vector validation
@@ -1014,7 +1014,7 @@ MIT License - see [LICENSE](LICENSE) file for details.
 ### v0.9.0 (Current)
 - **Full TypeScript rewrite** - Complete type safety with strict mode
 - **Zero `any` usage** - Type guards for all dynamic data
-- **639 tests** - Up from 488, includes mutation and boundary tests
+- **707 tests** - Up from 488, includes mutation and boundary tests
 - **Type exports** - All types available for consumers
 - Type guards: `isSeverity()`, `isViolationType()`, `isError()`, `getErrorMessage()`
 

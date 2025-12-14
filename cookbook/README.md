@@ -1,0 +1,168 @@
+# MCP Cookbook
+
+Example MCP servers built with the [mcp-security](https://github.com/anthropics/mcp-security) framework. These servers demonstrate how to build secure MCP tools for real-world APIs.
+
+## Servers
+
+| Server | Description | Auth Required |
+|--------|-------------|---------------|
+| **image-gen-server** | Unified image generation across 5 providers (BFL, Google, Ideogram, OpenAI, Stability) | 5 API keys |
+| **kenpom-server** | College basketball analytics from KenPom | Email + Password |
+| **nba-server** | NBA stats, live scores, and player data | None |
+
+## Quick Start
+
+### 1. Install Dependencies
+
+```bash
+cd cookbook
+npm install
+```
+
+### 2. Configure Environment
+
+```bash
+cp .env.example .env
+# Edit .env with your API keys
+```
+
+### 3. Build
+
+```bash
+npm run build
+```
+
+### 4. Add to Claude Desktop
+
+Add to your Claude Desktop config (`~/.config/claude/claude_desktop_config.json` on Linux, `~/Library/Application Support/Claude/claude_desktop_config.json` on macOS):
+
+```json
+{
+  "mcpServers": {
+    "image-gen": {
+      "command": "node",
+      "args": ["cookbook/image-gen-server/dist/index.js"],
+      "cwd": "/path/to/mcp-security"
+    },
+    "kenpom": {
+      "command": "node",
+      "args": ["cookbook/kenpom-server/dist/index.js"],
+      "cwd": "/path/to/mcp-security"
+    },
+    "nba": {
+      "command": "node",
+      "args": ["cookbook/nba-server/dist/index.js"],
+      "cwd": "/path/to/mcp-security"
+    }
+  }
+}
+```
+
+## Image Generation Server
+
+Unified interface for 5 image generation providers.
+
+### Tools
+
+| Tool | Description |
+|------|-------------|
+| `generate-image` | Text-to-image generation |
+| `edit-image` | Edit/inpaint with mask |
+| `upscale-image` | Upscale image resolution |
+| `create-variation` | Create image variations |
+| `remove-background` | Remove image background |
+| `replace-background` | Replace background |
+| `describe-image` | Get image description |
+| `list-models` | List available models |
+
+### Example Prompts
+
+- "Generate an image of a sunset over mountains using Stability AI"
+- "List all available models for image generation"
+- "Upscale this image using Ideogram"
+
+## KenPom Server
+
+College basketball analytics and efficiency ratings.
+
+### Tools
+
+| Tool | Description |
+|------|-------------|
+| `get-ratings` | Team efficiency ratings |
+| `get-program-ratings` | All-time program rankings |
+| `get-efficiency` | Offensive/defensive efficiency |
+| `get-four-factors` | Shooting, TO, rebounding, FT |
+| `get-team-stats` | 20+ team statistics |
+| `get-schedule` | Team game-by-game results |
+| `get-scouting-report` | 70+ detailed team stats |
+| `get-player-stats` | Individual player metrics |
+| `get-conference-standings` | Conference standings |
+| `get-fan-match` | Daily game predictions |
+
+### Example Prompts
+
+- "Get the current KenPom ratings"
+- "Show me Duke's schedule for 2024"
+- "Get the scouting report for Kansas"
+- "What are the four factors for the ACC?"
+
+## NBA Server
+
+NBA stats, live scores, and player data from public APIs.
+
+### Tools
+
+| Tool | Description |
+|------|-------------|
+| `get-player-stats` | Player career stats |
+| `get-player-game-log` | Player game-by-game |
+| `get-player-info` | Player bio and info |
+| `get-team-roster` | Current team roster |
+| `get-team-game-log` | Team game-by-game |
+| `get-league-leaders` | Top players by stat |
+| `get-standings` | Conference standings |
+| `get-box-score` | Game box score |
+| `get-play-by-play` | Game play-by-play |
+| `get-live-scoreboard` | Today's live scores |
+| `get-live-box-score` | Real-time box score |
+| `find-player` | Search players by name |
+
+### Example Prompts
+
+- "Get LeBron James career stats"
+- "Show today's NBA scores"
+- "Who are the league leaders in points?"
+- "Get the Lakers roster"
+
+## Security
+
+All servers use the mcp-security framework which provides:
+
+- **5-layer validation pipeline**: Structure, Content, Behavior, Semantics, Contextual
+- **Rate limiting**: Configurable per-minute and per-hour limits
+- **Attack pattern detection**: SQL injection, XSS, path traversal, etc.
+- **Error sanitization**: Prevents information leakage
+
+## Development
+
+### Run a single server
+
+```bash
+# After building
+npm run image-gen
+npm run kenpom
+npm run nba
+```
+
+### Project Structure
+
+```
+cookbook/
+├── package.json          # Monorepo root
+├── tsconfig.json         # Shared TypeScript config
+├── .env.example          # Environment template
+├── image-gen-server/     # Image generation MCP server
+├── kenpom-server/        # KenPom MCP server
+└── nba-server/           # NBA MCP server
+```

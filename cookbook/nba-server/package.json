@@ -1,0 +1,14 @@
+{
+  "name": "nba-server",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "MCP server for NBA stats, live scores, and player data",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/index.js"
+  },
+  "dependencies": {
+    "nba-api": "*"
+  }
+}

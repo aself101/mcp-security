@@ -24,3 +24,5 @@ logs/
 
 # Examples
 claude_desktop_config_example.json
+cookbook/
+generated-images/

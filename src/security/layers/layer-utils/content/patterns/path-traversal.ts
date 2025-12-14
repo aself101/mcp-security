@@ -120,13 +120,13 @@ export const command = {
     { pattern: /^host\s*:\s*[^:\s]+:(?:80|443|22|25|3306|6379)/im, name: 'Host Suspicious Port', severity: 'MEDIUM' }
   ],
   fileOperations: [
-    { pattern: /\bcat\s+/gi, name: 'Cat File Read', severity: 'MEDIUM' },
-    { pattern: /\bmore\s+/gi, name: 'More File Read', severity: 'MEDIUM' },
-    { pattern: /\bless\s+/gi, name: 'Less File Read', severity: 'MEDIUM' },
-    { pattern: /\bhead\s+/gi, name: 'Head File Read', severity: 'MEDIUM' },
-    { pattern: /\btail\s+/gi, name: 'Tail File Read', severity: 'MEDIUM' },
-    { pattern: /\bfind\s+/gi, name: 'Find Command', severity: 'MEDIUM' },
-    { pattern: /\bgrep\s+/gi, name: 'Grep Search', severity: 'LOW' }
+    { pattern: /\bcat\s+[\/\.~]/gi, name: 'Cat File Read', severity: 'MEDIUM' },
+    { pattern: /\bmore\s+[\/\.~]/gi, name: 'More File Read', severity: 'MEDIUM' },
+    { pattern: /\bless\s+[\/\.~]/gi, name: 'Less File Read', severity: 'MEDIUM' },
+    { pattern: /\bhead\s+[\/\.~-]/gi, name: 'Head File Read', severity: 'MEDIUM' },
+    { pattern: /\btail\s+[\/\.~-]/gi, name: 'Tail File Read', severity: 'MEDIUM' },
+    { pattern: /\bfind\s+[\/\.~]/gi, name: 'Find Command', severity: 'MEDIUM' },
+    { pattern: /\bgrep\s+(?:-[a-zA-Z]+\s+)*[\/\.~"']/gi, name: 'Grep Search', severity: 'LOW' }
   ],
   systemInfo: [
     { pattern: /\bps\s+/gi, name: 'Process List', severity: 'MEDIUM' },

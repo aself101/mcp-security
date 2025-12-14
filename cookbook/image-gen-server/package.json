@@ -1,0 +1,18 @@
+{
+  "name": "image-gen-server",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "MCP server for unified image generation across multiple providers",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/index.js"
+  },
+  "dependencies": {
+    "bfl-api": "*",
+    "google-genai-api": "*",
+    "ideogram-api": "*",
+    "openai-image-api": "*",
+    "stability-ai-api": "*"
+  }
+}

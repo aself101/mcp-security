@@ -40,3 +40,14 @@ ssl-certs/
 
 # Feature lists (generated)
 *-features-list.md
+
+# Generated content
+generated-images/
+
+# Local MCP config
+.mcp.json
+
+# Cookbook (MCP server examples)
+cookbook/**/node_modules/
+cookbook/**/.env
+cookbook/**/dist/

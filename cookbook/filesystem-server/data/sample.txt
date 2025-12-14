@@ -1,0 +1,10 @@
+This is a sample text file in the data directory.
+
+It contains some sample content that can be read by the filesystem server.
+
+Key features demonstrated:
+- Safe file reading
+- Path validation
+- Size limits
+
+This file is within the allowed directories and should be readable.

@@ -1,9 +1,95 @@
 {
+  "_comment": "Copy the relevant sections to your Claude Desktop config at: macOS: ~/Library/Application Support/Claude/claude_desktop_config.json | Windows: %APPDATA%/Claude/claude_desktop_config.json",
+
   "mcpServers": {
+
+    "_comment_native": "=== NATIVE (macOS/Linux) EXAMPLES ===",
+
     "secure-test": {
       "command": "node",
       "args": ["test-server/minimal-test-server.js"],
       "cwd": "/path/to/mcp-security"
+    },
+
+    "image-gen": {
+      "command": "node",
+      "args": ["dist/index.js"],
+      "cwd": "/path/to/mcp-security/cookbook/image-gen-server",
+      "env": {
+        "BFL_API_KEY": "your_bfl_api_key",
+        "OPENAI_API_KEY": "your_openai_api_key",
+        "STABILITY_API_KEY": "your_stability_api_key",
+        "IDEOGRAM_API_KEY": "your_ideogram_api_key",
+        "GOOGLE_GENAI_API_KEY": "your_google_api_key"
+      }
+    },
+
+    "kenpom": {
+      "command": "node",
+      "args": ["dist/index.js"],
+      "cwd": "/path/to/mcp-security/cookbook/kenpom-server",
+      "env": {
+        "KENPOM_EMAIL": "your_kenpom_email",
+        "KENPOM_PASSWORD": "your_kenpom_password"
+      }
+    },
+
+    "nba": {
+      "command": "node",
+      "args": ["dist/index.js"],
+      "cwd": "/path/to/mcp-security/cookbook/nba-server"
+    },
+
+    "_comment_wsl": "=== WSL (Windows Subsystem for Linux) EXAMPLES ===",
+
+    "secure-test-wsl": {
+      "command": "wsl",
+      "args": [
+        "-d", "Ubuntu",
+        "--cd", "/home/username/projects/mcp-security",
+        "node", "test-server/minimal-test-server.js"
+      ]
+    },
+
+    "image-gen-wsl": {
+      "command": "wsl",
+      "args": [
+        "-d", "Ubuntu",
+        "--cd", "/home/username/projects/mcp-security/cookbook/image-gen-server",
+        "/bin/bash", "-c",
+        "BFL_API_KEY=your_key OPENAI_API_KEY=your_key STABILITY_API_KEY=your_key IDEOGRAM_API_KEY=your_key GOOGLE_GENAI_API_KEY=your_key node dist/index.js"
+      ]
+    },
+
+    "kenpom-wsl": {
+      "command": "wsl",
+      "args": [
+        "-d", "Ubuntu",
+        "--cd", "/home/username/projects/mcp-security/cookbook/kenpom-server",
+        "/bin/bash", "-c",
+        "KENPOM_EMAIL=your_email KENPOM_PASSWORD=your_password node dist/index.js"
+      ]
+    },
+
+    "nba-wsl": {
+      "command": "wsl",
+      "args": [
+        "-d", "Ubuntu",
+        "--cd", "/home/username/projects/mcp-security/cookbook/nba-server",
+        "node", "dist/index.js"
+      ]
+    },
+
+    "_comment_nvm": "=== WSL WITH NVM (if node is not in PATH) ===",
+
+    "kenpom-wsl-nvm": {
+      "command": "wsl",
+      "args": [
+        "-d", "Ubuntu",
+        "--cd", "/home/username/projects/mcp-security/cookbook/kenpom-server",
+        "/bin/bash", "-c",
+        "KENPOM_EMAIL=your_email KENPOM_PASSWORD=your_password /home/username/.nvm/versions/node/v22.0.0/bin/node dist/index.js"
+      ]
     }
   }
 }

@@ -51,8 +51,9 @@ describe('ValidationPipeline', () => {
     it('creates pipeline with empty layers', () => {
       pipeline = new ValidationPipeline();
       expect(pipeline.layers).toEqual([]);
-      expect(typeof pipeline.errorSanitizer).toBe('object');
-      expect(typeof pipeline.errorSanitizer.redact).toBe('function');
+      expect(pipeline.errorSanitizer).toBeDefined();
+      // Verify errorSanitizer.redact works by calling it
+      expect(pipeline.errorSanitizer.redact('test input')).toBe('test input');
     });
 
     it('creates pipeline with provided layers', () => {
@@ -255,14 +256,16 @@ describe('ValidationPipeline', () => {
       const message = { method: 'test' };
       
       const result = await pipeline.validate(message);
-      
+
       expect(result.passed).toBe(true);
       expect(result.allowed).toBe(true);
-      expect(typeof result.severity).toBe('string');
-      expect(typeof result.reason).toBe('string');
+      // Verify normalized default values for passing validation
+      expect(result.severity).toBe('NONE');
+      expect(result.reason).toBe('All validation layers passed');
       expect(result.violationType).toBe(null);
-      expect(typeof result.confidence).toBe('number');
-      expect(typeof result.timestamp).toBe('number');
+      expect(result.confidence).toBeGreaterThanOrEqual(0);
+      expect(result.confidence).toBeLessThanOrEqual(1);
+      expect(result.timestamp).toBeGreaterThan(0);
     });
 
     it('handles mixed passed/allowed result formats', async () => {

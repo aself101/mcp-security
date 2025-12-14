@@ -1,0 +1,12 @@
+{
+  "app": {
+    "name": "Sample Application",
+    "version": "1.0.0",
+    "debug": false
+  },
+  "features": {
+    "enableCache": true,
+    "maxConnections": 100,
+    "timeout": 30000
+  }
+}

@@ -1,0 +1,30 @@
+{
+  "name": "mcp-cookbook",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Example MCP servers using mcp-security framework",
+  "workspaces": [
+    "image-gen-server",
+    "kenpom-server",
+    "nba-server"
+  ],
+  "scripts": {
+    "build": "npm run build --workspaces",
+    "start": "concurrently -n img,kp,nba -c blue,green,yellow \"npm run image-gen\" \"npm run kenpom\" \"npm run nba\"",
+    "image-gen": "node image-gen-server/dist/index.js",
+    "kenpom": "node kenpom-server/dist/index.js",
+    "nba": "node nba-server/dist/index.js"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "concurrently": "^8.2.2",
+    "typescript": "^5.3.0"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.0",
+    "dotenv": "^17.2.3",
+    "mcp-security": "file:../",
+    "zod": "^3.23.0"
+  }
+}

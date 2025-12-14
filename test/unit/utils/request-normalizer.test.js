@@ -60,8 +60,9 @@ describe('Request Normalizer', () => {
         expect(result.jsonrpc).toBe('2.0');
         expect(result.method).toBe('tools/call');
         expect(result.params).toEqual({ name: 'calculator', arguments: { a: 1 } });
-        expect(typeof result.id).toBe('string');
-        expect(result.id.length).toBeGreaterThan(0);
+        // Generated IDs are base-36 random strings in format "0.xxxxx"
+        expect(result.id).toMatch(/^0\.[a-z0-9]+$/);
+        expect(result.id.length).toBeGreaterThan(2);
       });
 
       it('should preserve existing id from SDK request', () => {
@@ -84,8 +85,9 @@ describe('Request Normalizer', () => {
 
         const result = normalizeRequest(request);
 
-        expect(typeof result.id).toBe('string');
-        expect(result.id.length).toBeGreaterThan(0);
+        // Generated IDs are base-36 random strings in format "0.xxxxx"
+        expect(result.id).toMatch(/^0\.[a-z0-9]+$/);
+        expect(result.id.length).toBeGreaterThan(2);
       });
     });
 
@@ -141,8 +143,9 @@ describe('Request Normalizer', () => {
         expect(result.jsonrpc).toBe('2.0');
         expect(result.method).toBe('unknown');
         expect(result.params).toEqual(rawObject);
-        expect(typeof result.id).toBe('string');
-        expect(result.id.length).toBeGreaterThan(0);
+        // Generated IDs are base-36 random strings in format "0.xxxxx"
+        expect(result.id).toMatch(/^0\.[a-z0-9]+$/);
+        expect(result.id.length).toBeGreaterThan(2);
       });
 
       it('should use provided method in raw object', () => {
@@ -173,8 +176,9 @@ describe('Request Normalizer', () => {
 
         expect(result.jsonrpc).toBe('2.0');
         expect(result.method).toBe('unknown');
-        expect(typeof result.id).toBe('string');
-        expect(result.id.length).toBeGreaterThan(0);
+        // Generated IDs are base-36 random strings in format "0.xxxxx"
+        expect(result.id).toMatch(/^0\.[a-z0-9]+$/);
+        expect(result.id.length).toBeGreaterThan(2);
       });
     });
 

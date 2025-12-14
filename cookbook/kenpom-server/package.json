@@ -1,0 +1,14 @@
+{
+  "name": "kenpom-server",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "MCP server for KenPom college basketball analytics",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/index.js"
+  },
+  "dependencies": {
+    "kenpom-api": "*"
+  }
+}

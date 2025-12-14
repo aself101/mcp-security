@@ -28,6 +28,12 @@ describe('Semantics Validation Layer', () => {
             path: { type: 'string' },
             content: { type: 'string' }
           }
+        },
+        {
+          name: 'egress-limited-tool',
+          sideEffects: 'none',
+          maxEgressBytes: 1000000,
+          argsShape: { data: { type: 'object' } }
         }
       ]
       // Let resourcePolicy use defaults which have properly configured paths
@@ -266,6 +272,37 @@ describe('Semantics Validation Layer', () => {
 
       const result = await layer.validate(message, {});
       expect(result.passed).toBe(false);
+    });
+
+    it('should handle circular reference in tool arguments (safeSizeOrFail)', async () => {
+      // Create a circular reference that will cause JSON.stringify to fail
+      const circularObj = { name: 'test' };
+      circularObj.self = circularObj;
+
+      // Use egress-limited-tool which has maxEgressBytes, triggering safeSizeOrFail
+      const message = createToolCallMessage('egress-limited-tool', { data: circularObj });
+      const result = await layer.validate(message, {});
+
+      expect(result.passed).toBe(false);
+      expect(result.violationType).toBe('ARG_SERIALIZATION_ERROR');
+      expect(result.reason).toMatch(/serialization error/i);
+    });
+
+    it('should report policy validation failure with proper fields (wrapPolicyResult)', async () => {
+      // Trigger a policy validation failure - accessing outside allowed roots
+      const message = {
+        jsonrpc: '2.0',
+        method: 'resources/read',
+        id: 1,
+        params: { uri: 'file:///etc/shadow' }
+      };
+
+      const result = await layer.validate(message, {});
+
+      expect(result.passed).toBe(false);
+      expect(result.severity).toBeDefined();
+      expect(result.reason).toBeDefined();
+      expect(result.reason.length).toBeGreaterThan(0);
     });
   });
 });

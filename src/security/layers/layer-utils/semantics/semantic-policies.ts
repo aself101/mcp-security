@@ -167,6 +167,9 @@ export function getDefaultPolicies(): Policies {
         'resources/read': { required: ['uri'], optional: [] },
         'prompts/list': { required: [], optional: [] },
         'prompts/get': { required: ['name'], optional: [] },
+        'notifications/initialized': { required: [], optional: [] },
+        'notifications/cancelled': { required: [], optional: [] },
+        'notifications/progress': { required: [], optional: [] },
       }
     },
     chainingRules: [

@@ -22,8 +22,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Boundary value tests for limits (20 tests)
 
 ### Changed
-- Test count increased to 639 (was 488)
-- Test coverage improved to 89%
+- Test count increased to 707 (was 488)
+- Test coverage improved to 86%
 - Package exports now point to dist/ directory
 - Strict TypeScript configuration (noUncheckedIndexedAccess, strictNullChecks)
 - README expanded to 1,037 lines with comprehensive documentation
