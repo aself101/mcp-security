@@ -39,18 +39,41 @@ export const upscaleImageSchema = z.object({
 export type UpscaleImageArgs = z.infer<typeof upscaleImageSchema>;
 
 export async function upscaleImage(args: UpscaleImageArgs) {
-  const provider = getProvider(args.provider as ProviderName);
+  try {
+    const provider = getProvider(args.provider as ProviderName);
 
-  if (!provider.upscale) {
-    throw new Error(`Provider ${args.provider} does not support upscaling`);
+    if (!provider.upscale) {
+      return {
+        content: [{
+          type: 'text' as const,
+          text: JSON.stringify({
+            success: false,
+            error: `Provider "${args.provider}" does not support upscaling. ` +
+              `Try: ideogram or stability instead.`
+          }, null, 2)
+        }],
+        isError: true
+      };
+    }
+
+    const result = await provider.upscale({
+      image: args.image,
+      scale: args.scale
+    });
+
+    return buildImageResponse(result);
+  } catch (error) {
+    return {
+      content: [{
+        type: 'text' as const,
+        text: JSON.stringify({
+          success: false,
+          error: error instanceof Error ? error.message : 'Failed to upscale image'
+        }, null, 2)
+      }],
+      isError: true
+    };
   }
-
-  const result = await provider.upscale({
-    image: args.image,
-    scale: args.scale
-  });
-
-  return buildImageResponse(result);
 }
 
 export const createVariationSchema = z.object({
@@ -60,12 +83,34 @@ export const createVariationSchema = z.object({
 export type CreateVariationArgs = z.infer<typeof createVariationSchema>;
 
 export async function createVariation(args: CreateVariationArgs) {
-  const provider = getProvider('openai');
+  try {
+    const provider = getProvider('openai');
 
-  if (!provider.createVariation) {
-    throw new Error('Create variation not supported');
+    if (!provider.createVariation) {
+      return {
+        content: [{
+          type: 'text' as const,
+          text: JSON.stringify({
+            success: false,
+            error: 'Create variation is only supported by OpenAI (DALL-E 2).'
+          }, null, 2)
+        }],
+        isError: true
+      };
+    }
+
+    const result = await provider.createVariation(args.image);
+    return buildImageResponse(result);
+  } catch (error) {
+    return {
+      content: [{
+        type: 'text' as const,
+        text: JSON.stringify({
+          success: false,
+          error: error instanceof Error ? error.message : 'Failed to create variation'
+        }, null, 2)
+      }],
+      isError: true
+    };
   }
-
-  const result = await provider.createVariation(args.image);
-  return buildImageResponse(result);
 }

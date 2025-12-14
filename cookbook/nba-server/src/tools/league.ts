@@ -9,8 +9,15 @@ let apiInstance: NbaAPI | null = null;
 
 async function getApi(): Promise<NbaAPI> {
   if (!apiInstance) {
-    apiInstance = new NbaAPI();
-    await apiInstance.connect();
+    try {
+      apiInstance = new NbaAPI();
+      await apiInstance.connect();
+    } catch (error) {
+      throw new Error(
+        'Failed to connect to NBA API. The service may be temporarily unavailable. ' +
+        `Error: ${error instanceof Error ? error.message : 'Unknown error'}`
+      );
+    }
   }
   return apiInstance;
 }
@@ -24,20 +31,33 @@ export const getLeagueLeadersSchema = z.object({
 export type GetLeagueLeadersArgs = z.infer<typeof getLeagueLeadersSchema>;
 
 export async function getLeagueLeaders(args: GetLeagueLeadersArgs) {
-  const api = await getApi();
-  const leaders = await api.getLeagueLeaders(args.season, args.statCategory);
+  try {
+    const api = await getApi();
+    const leaders = await api.getLeagueLeaders(args.season, args.statCategory);
 
-  return {
-    content: [{
-      type: 'text' as const,
-      text: JSON.stringify({
-        success: true,
-        season: args.season || 'current',
-        category: args.statCategory || 'PTS',
-        leaders
-      }, null, 2)
-    }]
-  };
+    return {
+      content: [{
+        type: 'text' as const,
+        text: JSON.stringify({
+          success: true,
+          season: args.season || 'current',
+          category: args.statCategory || 'PTS',
+          leaders
+        }, null, 2)
+      }]
+    };
+  } catch (error) {
+    return {
+      content: [{
+        type: 'text' as const,
+        text: JSON.stringify({
+          success: false,
+          error: error instanceof Error ? error.message : 'Failed to fetch league leaders'
+        }, null, 2)
+      }],
+      isError: true
+    };
+  }
 }
 
 export const getStandingsSchema = z.object({
@@ -48,17 +68,30 @@ export const getStandingsSchema = z.object({
 export type GetStandingsArgs = z.infer<typeof getStandingsSchema>;
 
 export async function getStandings(args: GetStandingsArgs) {
-  const api = await getApi();
-  const standings = await api.getLeagueStandings(args.season, args.seasonType);
+  try {
+    const api = await getApi();
+    const standings = await api.getLeagueStandings(args.season, args.seasonType);
 
-  return {
-    content: [{
-      type: 'text' as const,
-      text: JSON.stringify({
-        success: true,
-        season: args.season || 'current',
-        standings
-      }, null, 2)
-    }]
-  };
+    return {
+      content: [{
+        type: 'text' as const,
+        text: JSON.stringify({
+          success: true,
+          season: args.season || 'current',
+          standings
+        }, null, 2)
+      }]
+    };
+  } catch (error) {
+    return {
+      content: [{
+        type: 'text' as const,
+        text: JSON.stringify({
+          success: false,
+          error: error instanceof Error ? error.message : 'Failed to fetch standings'
+        }, null, 2)
+      }],
+      isError: true
+    };
+  }
 }

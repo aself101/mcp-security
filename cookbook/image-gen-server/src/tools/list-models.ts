@@ -13,24 +13,37 @@ export const listModelsSchema = z.object({
 export type ListModelsArgs = z.infer<typeof listModelsSchema>;
 
 export async function listModels(args: ListModelsArgs) {
-  let models: Record<string, string[]>;
+  try {
+    let models: Record<string, string[]>;
 
-  if (args.provider) {
-    const provider = getProvider(args.provider as ProviderName);
-    models = { [args.provider]: provider.listModels() };
-  } else {
-    models = listAllModels();
+    if (args.provider) {
+      const provider = getProvider(args.provider as ProviderName);
+      models = { [args.provider]: provider.listModels() };
+    } else {
+      models = listAllModels();
+    }
+
+    return {
+      content: [{
+        type: 'text' as const,
+        text: JSON.stringify({
+          success: true,
+          models
+        }, null, 2)
+      }]
+    };
+  } catch (error) {
+    return {
+      content: [{
+        type: 'text' as const,
+        text: JSON.stringify({
+          success: false,
+          error: error instanceof Error ? error.message : 'Failed to list models'
+        }, null, 2)
+      }],
+      isError: true
+    };
   }
-
-  return {
-    content: [{
-      type: 'text' as const,
-      text: JSON.stringify({
-        success: true,
-        models
-      }, null, 2)
-    }]
-  };
 }
 
 export const describeImageSchema = z.object({
@@ -40,22 +53,44 @@ export const describeImageSchema = z.object({
 export type DescribeImageArgs = z.infer<typeof describeImageSchema>;
 
 export async function describeImage(args: DescribeImageArgs) {
-  const provider = getProvider('ideogram');
+  try {
+    const provider = getProvider('ideogram');
 
-  if (!provider.describe) {
-    throw new Error('Describe image not supported');
+    if (!provider.describe) {
+      return {
+        content: [{
+          type: 'text' as const,
+          text: JSON.stringify({
+            success: false,
+            error: 'Describe image is only supported by Ideogram.'
+          }, null, 2)
+        }],
+        isError: true
+      };
+    }
+
+    const description = await provider.describe(args.image);
+
+    return {
+      content: [{
+        type: 'text' as const,
+        text: JSON.stringify({
+          success: true,
+          provider: 'ideogram',
+          description
+        }, null, 2)
+      }]
+    };
+  } catch (error) {
+    return {
+      content: [{
+        type: 'text' as const,
+        text: JSON.stringify({
+          success: false,
+          error: error instanceof Error ? error.message : 'Failed to describe image'
+        }, null, 2)
+      }],
+      isError: true
+    };
   }
-
-  const description = await provider.describe(args.image);
-
-  return {
-    content: [{
-      type: 'text' as const,
-      text: JSON.stringify({
-        success: true,
-        provider: 'ideogram',
-        description
-      }, null, 2)
-    }]
-  };
 }

@@ -6,6 +6,8 @@ Example MCP servers built with the [mcp-security](https://github.com/anthropics/
 
 | Server | Description | Auth Required |
 |--------|-------------|---------------|
+| **database-server** | Safe database operations with SQL injection prevention | None |
+| **filesystem-server** | Secure file system access with path traversal prevention | None |
 | **image-gen-server** | Unified image generation across 5 providers (BFL, Google, Ideogram, OpenAI, Stability) | 5 API keys |
 | **kenpom-server** | College basketball analytics from KenPom | Email + Password |
 | **nba-server** | NBA stats, live scores, and player data | None |
@@ -39,6 +41,16 @@ Add to your Claude Desktop config (`~/.config/claude/claude_desktop_config.json`
 ```json
 {
   "mcpServers": {
+    "database": {
+      "command": "node",
+      "args": ["cookbook/database-server/dist/index.js"],
+      "cwd": "/path/to/mcp-security"
+    },
+    "filesystem": {
+      "command": "node",
+      "args": ["cookbook/filesystem-server/dist/index.js"],
+      "cwd": "/path/to/mcp-security"
+    },
     "image-gen": {
       "command": "node",
       "args": ["cookbook/image-gen-server/dist/index.js"],
@@ -162,6 +174,8 @@ cookbook/
 ├── package.json          # Monorepo root
 ├── tsconfig.json         # Shared TypeScript config
 ├── .env.example          # Environment template
+├── database-server/      # Database MCP server (SQL injection prevention)
+├── filesystem-server/    # Filesystem MCP server (path traversal prevention)
 ├── image-gen-server/     # Image generation MCP server
 ├── kenpom-server/        # KenPom MCP server
 └── nba-server/           # NBA MCP server

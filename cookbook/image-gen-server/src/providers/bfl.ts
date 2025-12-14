@@ -14,10 +14,19 @@ const MODELS = [
 
 export class BflProvider implements ImageProvider {
   name: ProviderName = 'bfl';
-  private api: BflAPI;
+  private api: BflAPI | null = null;
 
-  constructor() {
-    this.api = new BflAPI();
+  private getApi(): BflAPI {
+    if (!this.api) {
+      if (!process.env.BFL_API_KEY) {
+        throw new Error(
+          'BFL API key required. Set BFL_API_KEY environment variable. ' +
+          'Get your API key at https://api.bfl.ml'
+        );
+      }
+      this.api = new BflAPI();
+    }
+    return this.api;
   }
 
   async generate(options: GenerateOptions): Promise<GenerateResult> {
@@ -29,24 +38,25 @@ export class BflProvider implements ImageProvider {
       aspect_ratio: options.aspectRatio
     };
 
+    const api = this.getApi();
     let task: any;
 
     switch (model) {
       case 'flux-dev':
-        task = await this.api.generateFluxDev(params);
+        task = await api.generateFluxDev(params);
         break;
       case 'flux-pro':
-        task = await this.api.generateFluxPro(params);
+        task = await api.generateFluxPro(params);
         break;
       case 'flux-pro-ultra':
-        task = await this.api.generateFluxProUltra(params);
+        task = await api.generateFluxProUltra(params);
         break;
       default:
-        task = await this.api.generateFluxPro(params);
+        task = await api.generateFluxPro(params);
     }
 
     // BFL API is async - need to poll for result
-    const result = await this.api.waitForResult(task.id, {
+    const result = await api.waitForResult(task.id, {
       pollingUrl: task.polling_url,
       showSpinner: false
     });

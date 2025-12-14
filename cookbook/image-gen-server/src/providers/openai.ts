@@ -10,16 +10,26 @@ const MODELS = ['dall-e-2', 'dall-e-3', 'gpt-image-1'];
 
 export class OpenAIProvider implements ImageProvider {
   name: ProviderName = 'openai';
-  private api: any;
+  private api: any = null;
 
-  constructor() {
-    this.api = new (OpenAIImageAPI as any)();
+  private getApi(): any {
+    if (!this.api) {
+      if (!process.env.OPENAI_API_KEY) {
+        throw new Error(
+          'OpenAI API key required. Set OPENAI_API_KEY environment variable. ' +
+          'Get your API key at https://platform.openai.com/api-keys'
+        );
+      }
+      this.api = new (OpenAIImageAPI as any)();
+    }
+    return this.api;
   }
 
   async generate(options: GenerateOptions): Promise<GenerateResult> {
+    const api = this.getApi();
     const model = options.model || 'dall-e-3';
 
-    const result = await this.api.generateImage({
+    const result = await api.generateImage({
       prompt: options.prompt,
       model,
       n: options.count || 1,
@@ -38,8 +48,9 @@ export class OpenAIProvider implements ImageProvider {
   }
 
   async edit(options: EditOptions): Promise<GenerateResult> {
+    const api = this.getApi();
     // OpenAI edit uses editImage or similar method
-    const result = await this.api.generateImage({
+    const result = await api.generateImage({
       prompt: options.prompt,
       model: 'dall-e-2',
       n: 1
@@ -57,8 +68,9 @@ export class OpenAIProvider implements ImageProvider {
   }
 
   async createVariation(image: string): Promise<GenerateResult> {
+    const api = this.getApi();
     // Use generate as fallback
-    const result = await this.api.generateImage({
+    const result = await api.generateImage({
       prompt: 'Create a variation',
       model: 'dall-e-2',
       n: 1

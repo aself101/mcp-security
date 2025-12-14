@@ -9,8 +9,21 @@ let apiInstance: KenpomAPI | null = null;
 
 async function getApi(): Promise<KenpomAPI> {
   if (!apiInstance) {
-    apiInstance = new KenpomAPI({ logLevel: 'NONE' });
-    await apiInstance.login();
+    if (!process.env.KENPOM_EMAIL || !process.env.KENPOM_PASSWORD) {
+      throw new Error(
+        'KenPom credentials required. Set KENPOM_EMAIL and KENPOM_PASSWORD environment variables. ' +
+        'Get your subscription at https://kenpom.com'
+      );
+    }
+    try {
+      apiInstance = new KenpomAPI({ logLevel: 'NONE' });
+      await apiInstance.login();
+    } catch (error) {
+      throw new Error(
+        'Failed to authenticate with KenPom. Verify your KENPOM_EMAIL and KENPOM_PASSWORD are correct. ' +
+        `Error: ${error instanceof Error ? error.message : 'Unknown error'}`
+      );
+    }
   }
   return apiInstance;
 }
@@ -26,19 +39,32 @@ export const getPlayerStatsSchema = z.object({
 export type GetPlayerStatsArgs = z.infer<typeof getPlayerStatsSchema>;
 
 export async function getPlayerStats(args: GetPlayerStatsArgs) {
-  const api = await getApi();
-  const stats = await api.getPlayerStats(args.season, args.metric, args.conference, args.conferenceOnly);
+  try {
+    const api = await getApi();
+    const stats = await api.getPlayerStats(args.season, args.metric, args.conference, args.conferenceOnly);
 
-  return {
-    content: [{
-      type: 'text' as const,
-      text: JSON.stringify({
-        success: true,
-        season: args.season || 'current',
-        metric: args.metric || 'all',
-        count: stats.length,
-        players: stats.slice(0, 100)
-      }, null, 2)
-    }]
-  };
+    return {
+      content: [{
+        type: 'text' as const,
+        text: JSON.stringify({
+          success: true,
+          season: args.season || 'current',
+          metric: args.metric || 'all',
+          count: stats.length,
+          players: stats.slice(0, 100)
+        }, null, 2)
+      }]
+    };
+  } catch (error) {
+    return {
+      content: [{
+        type: 'text' as const,
+        text: JSON.stringify({
+          success: false,
+          error: error instanceof Error ? error.message : 'Failed to fetch player stats'
+        }, null, 2)
+      }],
+      isError: true
+    };
+  }
 }

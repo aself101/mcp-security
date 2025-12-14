@@ -19,6 +19,7 @@ import 'dotenv/config';
 import { SecureMcpServer } from 'mcp-security';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
 
+import { z } from 'zod';
 import {
   queryUsersSchema,
   queryUsers,
@@ -32,6 +33,7 @@ import {
   healthCheckSchema,
   healthCheck,
 } from './tools/index.js';
+import { getDatabase } from './utils/index.js';
 
 // ============================================================================
 // Configuration
@@ -99,7 +101,7 @@ const server = new SecureMcpServer(
     // Default policy
     defaultPolicy: {
       allowNetwork: false,
-      allowWrites: false,
+      allowWrites: true,
     },
 
     // Global rate limits
@@ -174,6 +176,188 @@ server.tool(
 );
 
 // ============================================================================
+// Resource Definitions
+// ============================================================================
+
+/**
+ * Resource 1: database-schema
+ * Exposes the database schema for introspection
+ * - Read-only access to table definitions
+ * - Useful for understanding data structure
+ */
+server.resource(
+  'database-schema',
+  'db://schema',
+  {
+    description: 'Database schema definition showing all tables and columns',
+    mimeType: 'application/json',
+  },
+  async () => {
+    const db = getDatabase();
+    const tables = db.prepare(`
+      SELECT name FROM sqlite_master
+      WHERE type='table' AND name NOT LIKE 'sqlite_%'
+    `).all() as Array<{ name: string }>;
+
+    const schema: Record<string, unknown> = {};
+    for (const table of tables) {
+      const columns = db.prepare(`PRAGMA table_info(${table.name})`).all();
+      schema[table.name] = columns;
+    }
+
+    return {
+      contents: [{
+        uri: 'db://schema',
+        mimeType: 'application/json',
+        text: JSON.stringify({
+          type: 'sqlite',
+          mode: 'in-memory',
+          tables: schema,
+        }, null, 2),
+      }],
+    };
+  }
+);
+
+/**
+ * Resource 2: database-config
+ * Exposes safe database configuration (no secrets)
+ */
+server.resource(
+  'database-config',
+  'db://config',
+  {
+    description: 'Database configuration (safe to expose, no secrets)',
+    mimeType: 'application/json',
+  },
+  async () => {
+    return {
+      contents: [{
+        uri: 'db://config',
+        mimeType: 'application/json',
+        text: JSON.stringify({
+          type: 'sqlite',
+          mode: 'in-memory',
+          maxReportSize: MAX_REPORT_SIZE,
+          securityFeatures: {
+            layer2: 'SQL injection pattern detection',
+            layer4: ['Per-tool quotas', 'Side effect enforcement', 'Response size limits'],
+          },
+        }, null, 2),
+      }],
+    };
+  }
+);
+
+// ============================================================================
+// Prompt Definitions
+// ============================================================================
+
+/**
+ * Prompt 1: query-builder
+ * Helps users construct safe database queries
+ */
+server.prompt(
+  'query-builder',
+  'Generate a safe database query for common operations',
+  {
+    operation: z.enum(['search', 'report', 'order']).describe('Type of operation'),
+    details: z.string().optional().describe('Additional details about what you need'),
+  },
+  async (args: { operation: 'search' | 'report' | 'order'; details?: string }) => {
+    const { operation, details } = args;
+
+    const templates: Record<string, string> = {
+      search: `To search for users, use the query-users tool:
+{
+  "search": "your search term",
+  "department": "optional department filter",
+  "limit": 20
+}
+
+The search term will match against both name and email fields.
+${details ? `\nYour request: ${details}` : ''}`,
+
+      report: `To generate a report, use the generate-report tool:
+{
+  "startDate": "YYYY-MM-DD",
+  "endDate": "YYYY-MM-DD",
+  "groupBy": "day" | "week" | "month" | "department" | "status"
+}
+
+This will aggregate sales data for the specified period.
+${details ? `\nYour request: ${details}` : ''}`,
+
+      order: `To create an order, use the create-order tool:
+{
+  "userId": 1,
+  "items": [
+    { "product": "Product Name", "quantity": 1, "price": 99.99 }
+  ],
+  "total": 99.99
+}
+
+Note: The total must match the sum of (quantity * price) for all items.
+${details ? `\nYour request: ${details}` : ''}`,
+    };
+
+    return {
+      messages: [{
+        role: 'user',
+        content: {
+          type: 'text',
+          text: templates[operation] || 'Unknown operation type.',
+        },
+      }],
+    };
+  }
+);
+
+/**
+ * Prompt 2: security-info
+ * Provides information about the security features in use
+ */
+server.prompt(
+  'security-info',
+  'Learn about the security features protecting this database server',
+  async () => {
+    return {
+      messages: [{
+        role: 'user',
+        content: {
+          type: 'text',
+          text: `This database server is protected by the MCP Security Framework with multiple layers of defense:
+
+## Layer 2: Content Validation
+- SQL injection pattern detection (OR 1=1, UNION SELECT, DROP TABLE, etc.)
+- NoSQL injection pattern detection ($where, $regex, etc.)
+- Blocks malicious payloads before they reach the database
+
+## Layer 4: Semantic Validation
+- **Per-tool quotas**: Different rate limits per operation cost
+  - query-users: 60/min (cheap read)
+  - create-order: 10/min (write operation)
+  - generate-report: 2/min (expensive analytics)
+- **Side effect enforcement**: Tools declare read/write/none
+- **Response size limits**: Max egress bytes per tool
+
+## Application Level
+- **Parameterized queries**: All database queries use prepared statements
+- **Input validation**: Zod schemas with type constraints
+- **Transaction safety**: Atomic writes with rollback on failure
+
+## What This Prevents
+- SQL injection attacks
+- Data exfiltration via oversized responses
+- Resource exhaustion via expensive queries
+- Unauthorized write operations`,
+        },
+      }],
+    };
+  }
+);
+
+// ============================================================================
 // Server Startup
 // ============================================================================
 
@@ -190,6 +374,8 @@ async function main() {
 
   console.error('Database MCP Server running on stdio');
   console.error('Tools available: query-users, create-order, generate-report, health-check');
+  console.error('Resources available: database-schema, database-config');
+  console.error('Prompts available: query-builder, security-info');
 }
 
 main().catch((error) => {

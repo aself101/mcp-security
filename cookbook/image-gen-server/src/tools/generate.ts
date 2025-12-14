@@ -37,18 +37,19 @@ export const generateImageSchema = z.object({
 export type GenerateImageArgs = z.infer<typeof generateImageSchema>;
 
 export async function generateImage(args: GenerateImageArgs) {
-  const provider = getProvider(args.provider as ProviderName);
+  try {
+    const provider = getProvider(args.provider as ProviderName);
 
-  const result = await provider.generate({
-    prompt: args.prompt,
-    model: args.model,
-    negativePrompt: args.negativePrompt,
-    width: args.width,
-    height: args.height,
-    aspectRatio: args.aspectRatio,
-    style: args.style,
-    count: args.count
-  });
+    const result = await provider.generate({
+      prompt: args.prompt,
+      model: args.model,
+      negativePrompt: args.negativePrompt,
+      width: args.width,
+      height: args.height,
+      aspectRatio: args.aspectRatio,
+      style: args.style,
+      count: args.count
+    });
 
   const savedImages: Array<{ imagePath: string; metadataPath: string }> = [];
   const imageDataList: string[] = [];
@@ -137,5 +138,17 @@ export async function generateImage(args: GenerateImageArgs) {
     });
   }
 
-  return { content };
+    return { content };
+  } catch (error) {
+    return {
+      content: [{
+        type: 'text' as const,
+        text: JSON.stringify({
+          success: false,
+          error: error instanceof Error ? error.message : 'Failed to generate image'
+        }, null, 2)
+      }],
+      isError: true
+    };
+  }
 }

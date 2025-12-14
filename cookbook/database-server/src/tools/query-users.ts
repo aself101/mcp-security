@@ -36,7 +36,18 @@ export async function queryUsers(args: QueryUsersArgs): Promise<QueryUsersResult
   const db = getDatabase();
   const { search, department, limit } = args;
 
-  // Build parameterized query - SAFE from SQL injection
+  // ============================================================================
+  // SAFE: Parameterized Query (What this server uses)
+  // ============================================================================
+  // The ? placeholders are replaced by the database driver with properly escaped
+  // values. Even if 'search' contains SQL syntax like "' OR 1=1 --", it will be
+  // treated as literal text, not executable SQL code.
+  //
+  // UNSAFE alternative (NEVER DO THIS):
+  // const query = `SELECT * FROM users WHERE name LIKE '%${search}%'`;
+  // This allows SQL injection! An attacker could use search="' OR '1'='1"
+  // to bypass filters and extract all data.
+  // ============================================================================
   let query = `
     SELECT id, name, email, department, created_at
     FROM users

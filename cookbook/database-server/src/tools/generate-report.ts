@@ -150,7 +150,12 @@ export async function generateReport(args: GenerateReportArgs): Promise<Generate
       return {
         content: [{
           type: 'text',
-          text: JSON.stringify({ error: 'Invalid groupBy value' }, null, 2),
+          text: JSON.stringify({
+            error: 'Invalid groupBy value',
+            message: `"${groupBy}" is not a valid groupBy option`,
+            provided: groupBy,
+            validOptions: ['day', 'week', 'month', 'department', 'status'],
+          }, null, 2),
         }],
       };
   }

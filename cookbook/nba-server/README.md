@@ -94,7 +94,7 @@ Get game-by-game results for an NBA team.
 Get league leaders in various statistical categories.
 
 **Parameters:**
-- `category` (enum, optional): PTS, REB, AST, STL, BLK, etc.
+- `statCategory` (enum, optional): PTS, REB, AST, STL, BLK, FG_PCT, FT_PCT, FG3_PCT
 - `season` (string, optional): Season
 
 #### get-standings

@@ -72,7 +72,10 @@ export function getProvider(name: ProviderName): ImageProvider {
         provider = new StabilityProvider();
         break;
       default:
-        throw new Error(`Unknown provider: ${name}`);
+        throw new Error(
+          `Unknown provider: ${name}. ` +
+          `Valid providers: bfl, google, ideogram, openai, stability`
+        );
     }
     providers.set(name, provider);
   }

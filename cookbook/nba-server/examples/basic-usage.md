@@ -112,7 +112,7 @@ Arguments: { "teamId": 1610612744 }
 
 ```
 Tool: get-league-leaders
-Arguments: { "category": "PTS" }
+Arguments: { "statCategory": "PTS" }
 ```
 
 Response:

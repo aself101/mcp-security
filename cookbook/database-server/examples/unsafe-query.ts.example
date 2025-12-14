@@ -1,0 +1,57 @@
+/**
+ * UNSAFE Query Example - DO NOT USE IN PRODUCTION
+ *
+ * This file demonstrates VULNERABLE code patterns that should NEVER be used.
+ * It exists only for educational purposes to show what NOT to do.
+ *
+ * The database-server uses SAFE parameterized queries instead.
+ */
+
+import Database from 'better-sqlite3';
+
+const db = new Database(':memory:');
+
+// Setup
+db.exec(`CREATE TABLE users (id INTEGER PRIMARY KEY, name TEXT, password TEXT)`);
+db.exec(`INSERT INTO users VALUES (1, 'admin', 'secret123')`);
+db.exec(`INSERT INTO users VALUES (2, 'user', 'password')`);
+
+/**
+ * UNSAFE: String Concatenation (VULNERABLE TO SQL INJECTION)
+ *
+ * NEVER do this! The search value is directly embedded in the SQL string.
+ * An attacker can inject malicious SQL code.
+ */
+function unsafeSearch(search: string) {
+  // BAD: User input is concatenated directly into SQL
+  const query = `SELECT * FROM users WHERE name = '${search}'`;
+  return db.prepare(query).all();
+}
+
+// Normal use works fine
+console.log('Normal search:');
+console.log(unsafeSearch('admin'));
+// Output: [{ id: 1, name: 'admin', password: 'secret123' }]
+
+// But an attacker can inject SQL:
+console.log('\nSQL Injection Attack - Bypass authentication:');
+console.log(unsafeSearch("' OR '1'='1"));
+// Output: ALL users! The query becomes:
+// SELECT * FROM users WHERE name = '' OR '1'='1'
+// The OR '1'='1' is always true, returning all rows
+
+console.log('\nSQL Injection Attack - Extract all data:');
+console.log(unsafeSearch("' UNION SELECT id, name, password FROM users --"));
+// Output: All usernames and passwords exposed!
+
+/**
+ * THE FIX: Use parameterized queries instead
+ *
+ * function safeSearch(search: string) {
+ *   const query = `SELECT * FROM users WHERE name = ?`;
+ *   return db.prepare(query).all(search);
+ * }
+ *
+ * With parameterized queries, the injection attempt is treated as
+ * a literal string value, not SQL code.
+ */
