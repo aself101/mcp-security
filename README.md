@@ -3,7 +3,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Node.js](https://img.shields.io/badge/node-%3E%3D18.0.0-brightgreen)](https://nodejs.org)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.0+-blue.svg)](https://www.typescriptlang.org/)
-[![Tests](https://img.shields.io/badge/tests-1066%20passing-brightgreen)](test/)
+[![Tests](https://img.shields.io/badge/tests-1067%20passing-brightgreen)](test/)
 [![Coverage](https://img.shields.io/badge/coverage-86%25-brightgreen)](test/)
 
 A secure-by-default MCP server built on the official SDK with 5-layer validation. Provides defense-in-depth against traditional attacks and AI-driven threats.
@@ -105,7 +105,7 @@ The MCP Security Framework acts as a universal wrapper for any MCP server, provi
 - **Zero Configuration** - Security enabled by default with sensible defaults
 - **Universal Compatibility** - Works with any MCP server using @modelcontextprotocol/sdk
 - **Extensible Layer 5** - Add custom validators, domain restrictions, OAuth validation
-- **Tested** - 1066 tests with 86% coverage
+- **Tested** - 1067 tests with 86% coverage
 - **Opt-in Logging** - Quiet by default for production use
 - **Performance Optimized** - Content caching and efficient pattern detection
 - **Full TypeScript Support** - Complete type definitions with strict mode

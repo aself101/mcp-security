@@ -78,6 +78,25 @@ type MessageHandler = ((message: McpMessage, extra?: unknown) => void) | null;
 type ErrorHandler = ((error: Error) => void) | null;
 type CloseHandler = (() => void) | null;
 
+/**
+ * Secure transport wrapper that intercepts MCP messages for security validation.
+ *
+ * Wraps any MCP transport to validate incoming messages before they reach handlers.
+ * Blocks malicious requests with proper JSON-RPC error responses.
+ *
+ * @example
+ * ```typescript
+ * import { SecureTransport } from 'mcp-security';
+ *
+ * const secureTransport = new SecureTransport(
+ *   originalTransport,
+ *   async (message, context) => {
+ *     // Custom validation logic
+ *     return { passed: true, allowed: true };
+ *   }
+ * );
+ * ```
+ */
 export class SecureTransport {
   private _transport: McpTransport;
   private _validator: TransportValidator;
