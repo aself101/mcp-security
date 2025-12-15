@@ -171,6 +171,8 @@ class SecurityLogger {
     process.on('exit', () => {
       try {
         for (const [_filename, stream] of this.streams) {
+          // SAFETY: WriteStream has flush() and fd properties not typed on Stream base.
+          // We check existence before use; assertion is safe for graceful shutdown.
           if (stream && typeof (stream as unknown as { flush?: () => void }).flush === 'function') {
             (stream as unknown as { flush: () => void }).flush();
           }

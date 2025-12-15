@@ -221,6 +221,8 @@ class SecureMcpServer {
 
   async connect(transport: McpTransport): Promise<void> {
     this._wrappedTransport = this._wrapTransport(transport);
+    // SAFETY: SecureTransport implements the same interface as SDK transport but with
+    // different type signature. The assertion bridges our wrapper to the SDK's expected type.
     return this._mcpServer.connect(this._wrappedTransport as unknown as Parameters<McpServer['connect']>[0]);
   }
 

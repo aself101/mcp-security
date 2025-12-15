@@ -11,12 +11,14 @@ import {
   normalizePolicies,
   validateToolCall as validateToolContract,
   validateResourceAccess,
+  simpleGlobMatch,
   ToolSpec,
   ResourcePolicy,
   MethodSpec,
   ChainingRule,
   PolicyValidationResult,
-  ToolCallParams
+  ToolCallParams,
+  SideEffects
 } from './layer-utils/semantics/semantic-policies.js';
 
 /** Layer 4 specific options */
@@ -26,6 +28,8 @@ export interface SemanticsLayerOptions extends ValidationLayerOptions {
   methodSpec?: Partial<MethodSpec>;
   chainingRules?: ChainingRule[];
   enforceChaining?: boolean;
+  /** Default action when no chaining rule matches. Default: 'deny' (for backward compatibility) */
+  chainingDefaultAction?: 'allow' | 'deny';
   quotas?: Record<string, QuotaLimits>;
   quotaProvider?: QuotaProvider;
   clockSkewMs?: number;
@@ -67,6 +71,10 @@ interface SizeResult extends ValidationResult {
 interface SessionEntry {
   method: string;
   timestamp: number;
+  /** Tool name for tools/call methods */
+  toolName?: string;
+  /** Side effect of the tool (from registry) */
+  toolSideEffect?: SideEffects;
 }
 
 export default class SemanticsValidationLayer extends ValidationLayer {
@@ -75,6 +83,7 @@ export default class SemanticsValidationLayer extends ValidationLayer {
   private methods: MethodSpec;
   private chaining: ChainingRule[];
   private enforceChaining: boolean;
+  private chainingDefaultAction: 'allow' | 'deny';
   private quotas: Record<string, QuotaLimits>;
   private quotaProvider: QuotaProvider;
   private sessions: Map<string, SessionEntry>;
@@ -99,6 +108,8 @@ export default class SemanticsValidationLayer extends ValidationLayer {
     this.methods = normalized.methodSpec;
     this.chaining = normalized.chainingRules;
     this.enforceChaining = options.enforceChaining ?? false; // Disabled by default
+    // Default to 'deny' for backward compatibility (old behavior denied if no rule matched)
+    this.chainingDefaultAction = options.chainingDefaultAction ?? 'deny';
 
     this.quotas = options.quotas ?? {};
     this.quotaProvider = options.quotaProvider ?? new InMemoryQuotaProvider({
@@ -152,25 +163,67 @@ export default class SemanticsValidationLayer extends ValidationLayer {
       this.cleanExpiredSessions(now);
     }
 
+    // Get previous session entry (if valid)
     const entry = this.sessions.get(sessionKey);
-    const previousMethod = entry && (now - entry.timestamp < this.sessionTtlMs) ? entry.method : '*';
+    const validEntry = entry && (now - entry.timestamp < this.sessionTtlMs) ? entry : null;
+
+    // Build transition context
+    const previousMethod = validEntry?.method ?? '*';
     const currentMethod = message.method ?? '';
 
-    const allowed = this.chaining.some(rule =>
-      (rule.from === previousMethod || rule.from === '*') && rule.to === currentMethod
-    );
+    // Extract tool info for tools/call
+    const currentToolName = currentMethod === 'tools/call' ? (message.params?.name as string | undefined) : undefined;
+    const currentTool = currentToolName ? this.tools.get(currentToolName) : undefined;
+    const currentSideEffect = currentTool?.sideEffects;
 
-    if (allowed) {
-      this.sessions.set(sessionKey, { method: currentMethod, timestamp: now });
+    const previousToolName = validEntry?.toolName;
+    const previousSideEffect = validEntry?.toolSideEffect;
+
+    // First-match-wins evaluation
+    let matchedRule: ChainingRule | undefined;
+    for (const rule of this.chaining) {
+      // Check method match
+      const methodMatch = (rule.from === previousMethod || rule.from === '*') &&
+                          (rule.to === currentMethod || rule.to === '*');
+      if (!methodMatch) continue;
+
+      // Check tool match (only for tools/call)
+      const fromToolMatch = simpleGlobMatch(rule.fromTool, previousToolName);
+      const toToolMatch = simpleGlobMatch(rule.toTool, currentToolName);
+      if (!fromToolMatch || !toToolMatch) continue;
+
+      // Check side effect match
+      const fromSideEffectMatch = rule.fromSideEffect === undefined || rule.fromSideEffect === previousSideEffect;
+      const toSideEffectMatch = rule.toSideEffect === undefined || rule.toSideEffect === currentSideEffect;
+      if (!fromSideEffectMatch || !toSideEffectMatch) continue;
+
+      // All constraints matched
+      matchedRule = rule;
+      break;
     }
 
-    if (!allowed) {
+    // Determine action
+    const action = matchedRule?.action ?? (matchedRule ? 'allow' : this.chainingDefaultAction);
+
+    if (action === 'deny') {
+      const ruleId = matchedRule?.id ? ` "${matchedRule.id}"` : '';
+      const details = matchedRule?.fromSideEffect || matchedRule?.toSideEffect
+        ? ` (${previousSideEffect ?? 'none'} → ${currentSideEffect ?? 'none'})`
+        : '';
       return this.createFailureResult(
-        `Method chaining not allowed: ${previousMethod} → ${currentMethod}`,
-        'MEDIUM',
+        `Transition denied by rule${ruleId}: ${previousMethod} → ${currentMethod}${details}`,
+        'HIGH',
         'CHAIN_VIOLATION'
       );
     }
+
+    // Update session with extended entry
+    this.sessions.set(sessionKey, {
+      method: currentMethod,
+      timestamp: now,
+      toolName: currentToolName,
+      toolSideEffect: currentSideEffect
+    });
 
     return this.createSuccessResult();
   }

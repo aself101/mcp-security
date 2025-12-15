@@ -83,6 +83,15 @@
       }
     },
 
+    "transaction": {
+      "command": "node",
+      "args": ["dist/index.js"],
+      "cwd": "/path/to/mcp-security/cookbook/transaction-server",
+      "env": {
+        "VERBOSE_LOGGING": "false"
+      }
+    },
+
     "_comment_wsl": "=== WSL (Windows Subsystem for Linux) EXAMPLES ===",
 
     "secure-test-wsl": {
@@ -173,6 +182,15 @@
       "args": [
         "-d", "Ubuntu",
         "--cd", "/home/username/projects/mcp-security/cookbook/monitoring-server",
+        "node", "dist/index.js"
+      ]
+    },
+
+    "transaction-wsl": {
+      "command": "wsl",
+      "args": [
+        "-d", "Ubuntu",
+        "--cd", "/home/username/projects/mcp-security/cookbook/transaction-server",
         "node", "dist/index.js"
       ]
     },

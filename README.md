@@ -3,7 +3,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Node.js](https://img.shields.io/badge/node-%3E%3D18.0.0-brightgreen)](https://nodejs.org)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.0+-blue.svg)](https://www.typescriptlang.org/)
-[![Tests](https://img.shields.io/badge/tests-707%20passing-brightgreen)](test/)
+[![Tests](https://img.shields.io/badge/tests-1066%20passing-brightgreen)](test/)
 [![Coverage](https://img.shields.io/badge/coverage-86%25-brightgreen)](test/)
 
 A secure-by-default MCP server built on the official SDK with 5-layer validation. Provides defense-in-depth against traditional attacks and AI-driven threats.
@@ -93,6 +93,7 @@ Example MCP servers demonstrating the security framework. Each server includes i
 | [kenpom-server](cookbook/kenpom-server) | College basketball analytics and efficiency ratings | Ratings, schedules, scouting reports, player stats | KenPom login |
 | [monitoring-server](cookbook/monitoring-server) | Observability with metrics, audit logging, and alerts | Security metrics, audit log, alerts, Prometheus export | None |
 | [nba-server](cookbook/nba-server) | NBA stats, live scores, and player data | Player stats, box scores, live scoreboard | None |
+| [transaction-server](cookbook/transaction-server) | Method chaining enforcement for secure transaction workflows | Session, accounts, prepare/confirm/execute transactions | None |
 
 See the [cookbook README](cookbook/README.md) for setup instructions and detailed documentation.
 
@@ -104,7 +105,7 @@ The MCP Security Framework acts as a universal wrapper for any MCP server, provi
 - **Zero Configuration** - Security enabled by default with sensible defaults
 - **Universal Compatibility** - Works with any MCP server using @modelcontextprotocol/sdk
 - **Extensible Layer 5** - Add custom validators, domain restrictions, OAuth validation
-- **Tested** - 707 tests with 86% coverage
+- **Tested** - 1066 tests with 86% coverage
 - **Opt-in Logging** - Quiet by default for production use
 - **Performance Optimized** - Content caching and efficient pattern detection
 - **Full TypeScript Support** - Complete type definitions with strict mode
@@ -219,6 +220,7 @@ Tool contract enforcement and resource access policies.
 - Side effect declarations
 - Filesystem access control via resource policies
 - Session management
+- Method chaining enforcement (opt-in)
 
 **Configuration:**
 ```typescript
@@ -248,6 +250,74 @@ Tool contract enforcement and resource access policies.
   sessionTtlMs: 1800000            // 30 minutes
 }
 ```
+
+#### Method Chaining Enforcement
+
+Layer 4 can enforce valid method call sequences to prevent abuse patterns like calling dangerous tools without proper initialization.
+
+**Enable chaining enforcement:**
+```typescript
+{
+  enforceChaining: true,           // Enable method chaining (default: false)
+  chainingDefaultAction: 'deny',   // 'allow' | 'deny' when no rule matches
+  chainingRules: [
+    // Allow any method to call initialize
+    { from: '*', to: 'initialize' },
+    // After initialize, can list tools or resources
+    { from: 'initialize', to: 'tools/list' },
+    { from: 'initialize', to: 'resources/list' },
+    // After listing tools, can call them
+    { from: 'tools/list', to: 'tools/call' },
+    // Tool-to-tool calls allowed
+    { from: 'tools/call', to: 'tools/call' },
+  ]
+}
+```
+
+**ChainingRule type:**
+```typescript
+interface ChainingRule {
+  from: string;              // Method to transition from ('*' for any)
+  to: string;                // Method to transition to ('*' for any)
+  fromTool?: string;         // Tool name glob pattern (e.g., 'file-*', '*-http*')
+  toTool?: string;           // Tool name glob pattern
+  fromSideEffect?: SideEffects;  // 'none' | 'read' | 'write' | 'network'
+  toSideEffect?: SideEffects;
+  action?: 'allow' | 'deny'; // Default: 'allow'
+  id?: string;               // Rule identifier for logging
+  description?: string;      // Human-readable description
+}
+```
+
+**Advanced example - block dangerous transitions:**
+```typescript
+{
+  enforceChaining: true,
+  chainingDefaultAction: 'allow',  // Allow by default
+  chainingRules: [
+    // Block read tools from calling write tools directly
+    {
+      from: 'tools/call',
+      to: 'tools/call',
+      fromSideEffect: 'read',
+      toSideEffect: 'write',
+      action: 'deny',
+      id: 'no-read-to-write'
+    },
+    // Block file-* tools from calling *-http* tools
+    {
+      from: 'tools/call',
+      to: 'tools/call',
+      fromTool: 'file-*',
+      toTool: '*-http*',
+      action: 'deny',
+      id: 'no-file-to-http'
+    }
+  ]
+}
+```
+
+Rules are evaluated first-match-wins. Tool patterns use simple glob matching (`*` = any chars, `?` = single char).
 
 ### Layer 5 - Contextual Validation
 
@@ -888,7 +958,7 @@ npm run test:coverage
 
 **Test Coverage:**
 - Overall: 86% lines, 86% branches
-- 707 comprehensive tests
+- 1066 comprehensive tests
 - Mutation tests for severity levels
 - Boundary value tests for limits
 - Real attack vector validation
@@ -1032,7 +1102,7 @@ MIT License - see [LICENSE](LICENSE) file for details.
 ### v0.9.0 (Current)
 - **Full TypeScript rewrite** - Complete type safety with strict mode
 - **Zero `any` usage** - Type guards for all dynamic data
-- **707 tests** - Up from 488, includes mutation and boundary tests
+- **1066 tests** - Up from 707, includes extended chaining rules tests
 - **Type exports** - All types available for consumers
 - Type guards: `isSeverity()`, `isViolationType()`, `isError()`, `getErrorMessage()`
 

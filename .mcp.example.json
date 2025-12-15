@@ -56,6 +56,13 @@
       "args": [
         "/path/to/mcp-security/cookbook/monitoring-server/dist/index.js"
       ]
+    },
+    "transaction": {
+      "type": "stdio",
+      "command": "node",
+      "args": [
+        "/path/to/mcp-security/cookbook/transaction-server/dist/index.js"
+      ]
     }
   }
 }

@@ -58,8 +58,24 @@ export interface MethodSpec {
 
 /** Chaining rule definition */
 export interface ChainingRule {
+  /** Method to transition from ('*' for any) */
   from: string;
+  /** Method to transition to ('*' for any) */
   to: string;
+  /** Tool name pattern (glob: * = any, ? = single char). Only applies to tools/call */
+  fromTool?: string;
+  /** Tool name pattern (glob: * = any, ? = single char). Only applies to tools/call */
+  toTool?: string;
+  /** Side effect of the 'from' tool */
+  fromSideEffect?: SideEffects;
+  /** Side effect of the 'to' tool */
+  toSideEffect?: SideEffects;
+  /** Action to take when rule matches. Default: 'allow' */
+  action?: 'allow' | 'deny';
+  /** Rule identifier for logging */
+  id?: string;
+  /** Human-readable description */
+  description?: string;
 }
 
 /** Complete policies configuration */
@@ -109,6 +125,46 @@ function globToRegExp(glob: string | RegExp): RegExp {
     .replace(/\\?/g, '[^/]');
   return new RegExp('^' + g + '$', 'i');
 }
+
+/** Cache for compiled glob patterns */
+const globCache = new Map<string, RegExp>();
+const MAX_GLOB_CACHE_SIZE = 100;
+
+/**
+ * Simple glob matching for tool names
+ * Supports: * (any sequence), ? (single char)
+ * @param pattern - Glob pattern or undefined (matches everything)
+ * @param value - Value to match against
+ * @returns true if matches or pattern is undefined
+ */
+export function simpleGlobMatch(pattern: string | undefined, value: string | undefined): boolean {
+  // Undefined pattern matches everything
+  if (pattern === undefined) return true;
+  // Undefined value only matches if pattern is '*' or undefined
+  if (value === undefined) return pattern === '*';
+  // Exact '*' matches everything
+  if (pattern === '*') return true;
+
+  // Check cache first
+  let regex = globCache.get(pattern);
+  if (!regex) {
+    // Evict oldest entry if cache is full (FIFO eviction)
+    if (globCache.size >= MAX_GLOB_CACHE_SIZE) {
+      const firstKey = globCache.keys().next().value;
+      if (firstKey !== undefined) globCache.delete(firstKey);
+    }
+    // Convert glob to regex: escape special chars, then convert * and ?
+    const escaped = pattern.replace(/[.+^${}()|[\]\\]/g, '\\$&');
+    const regexStr = escaped.replace(/\*/g, '.*').replace(/\?/g, '.');
+    regex = new RegExp(`^${regexStr}$`, 'i');
+    globCache.set(pattern, regex);
+  }
+
+  return regex.test(value);
+}
+
+/** Export cache size constant for testing */
+export const GLOB_CACHE_MAX_SIZE = MAX_GLOB_CACHE_SIZE;
 
 export function getDefaultPolicies(): Policies {
   const __filename = fileURLToPath(import.meta.url);
