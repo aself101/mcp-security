@@ -11,9 +11,11 @@ Example MCP servers built with the [mcp-security](https://github.com/anthropics/
 | **cli-wrapper-server** | Safe CLI tool wrapping with command injection prevention | None |
 | **database-server** | Safe database operations with SQL injection prevention | None |
 | **filesystem-server** | Secure file system access with path traversal prevention | None |
+| **http-server** | Simple HTTP transport using `createHttpServer()` | None |
 | **image-gen-server** | Unified image generation across 5 providers (BFL, Google, Ideogram, OpenAI, Stability) | 5 API keys |
 | **kenpom-server** | College basketball analytics from KenPom | Email + Password |
 | **monitoring-server** | Observability with metrics, audit logging, and alerts | None |
+| **multi-endpoint-server** | Multiple HTTP endpoints using `createSecureHttpHandler()` | None |
 | **nba-server** | NBA stats, live scores, and player data | None |
 
 ## Quick Start
@@ -161,6 +163,34 @@ Safe wrapping of command-line tools with command injection prevention.
 - "Get metadata from /home/user/docs/report.pdf"
 - "Encode /tmp/video.mp4 to webm format"
 
+## HTTP Server
+
+Simple HTTP transport example using `createHttpServer()`.
+
+### Tools
+
+| Tool | Description |
+|------|-------------|
+| `calculator` | Basic arithmetic (add, subtract, multiply, divide) |
+| `echo` | Echo messages with optional transforms (uppercase, reverse) |
+
+### Running
+
+```bash
+cd cookbook/http-server
+npm install && npm run build && npm start
+# Server starts at http://localhost:3000/mcp
+```
+
+### Example Request
+
+```bash
+curl -X POST http://localhost:3000/mcp \
+  -H "Content-Type: application/json" \
+  -H "Accept: application/json, text/event-stream" \
+  -d '{"jsonrpc":"2.0","method":"tools/call","id":1,"params":{"name":"calculator","arguments":{"operation":"add","a":5,"b":3}}}'
+```
+
 ## Image Generation Server
 
 Unified interface for 5 image generation providers.
@@ -238,6 +268,60 @@ Observability and monitoring for MCP deployments.
 - "Export metrics in Prometheus format"
 - "List all configured alert rules"
 
+## Multi-Endpoint Server
+
+Multiple HTTP endpoints example using `createSecureHttpHandler()` for composing separate MCP servers.
+
+### Endpoints
+
+| Endpoint | Description | Tools |
+|----------|-------------|-------|
+| `/api/admin` | Admin API with logging enabled | list-users, system-stats |
+| `/api/public` | Public API with stricter limits | health, status |
+
+### Running
+
+```bash
+cd cookbook/multi-endpoint-server
+npm install && npm run build && npm start
+# Server starts at http://localhost:3000
+#   Admin API:  http://localhost:3000/api/admin
+#   Public API: http://localhost:3000/api/public
+```
+
+### Example Requests
+
+```bash
+# Admin - list users
+curl -X POST http://localhost:3000/api/admin \
+  -H "Content-Type: application/json" \
+  -H "Accept: application/json, text/event-stream" \
+  -d '{"jsonrpc":"2.0","method":"tools/call","id":1,"params":{"name":"list-users","arguments":{}}}'
+
+# Public - health check
+curl -X POST http://localhost:3000/api/public \
+  -H "Content-Type: application/json" \
+  -H "Accept: application/json, text/event-stream" \
+  -d '{"jsonrpc":"2.0","method":"tools/call","id":1,"params":{"name":"health","arguments":{}}}'
+```
+
+### Architecture
+
+```
+┌─────────────────────────────────────────────────────┐
+│                   HTTP Server                        │
+│                  localhost:3000                      │
+├─────────────────────────────────────────────────────┤
+│  ┌──────────────────┐    ┌──────────────────┐      │
+│  │   /api/admin     │    │   /api/public    │      │
+│  │  Admin Handler   │    │  Public Handler  │      │
+│  │  - list-users    │    │  - health        │      │
+│  │  - system-stats  │    │  - status        │      │
+│  │  Logging: ON     │    │  Logging: OFF    │      │
+│  └──────────────────┘    └──────────────────┘      │
+└─────────────────────────────────────────────────────┘
+```
+
 ## NBA Server
 
 NBA stats, live scores, and player data from public APIs.
@@ -298,8 +382,10 @@ cookbook/
 ├── cli-wrapper-server/       # CLI wrapper MCP server (command injection prevention)
 ├── database-server/          # Database MCP server (SQL injection prevention)
 ├── filesystem-server/        # Filesystem MCP server (path traversal prevention)
+├── http-server/              # Simple HTTP transport demo
 ├── image-gen-server/         # Image generation MCP server
 ├── kenpom-server/            # KenPom MCP server
 ├── monitoring-server/        # Observability MCP server (metrics, audit, alerts)
+├── multi-endpoint-server/    # Multi-endpoint HTTP transport demo
 └── nba-server/               # NBA MCP server
 ```

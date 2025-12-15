@@ -14,7 +14,8 @@ import ContextualValidationLayer from "./layers/layer5-contextual.js";
 import { InMemoryQuotaProvider, QuotaProvider } from "./layers/layer-utils/semantics/semantic-quotas.js";
 import { defaultToolRegistry, defaultResourcePolicy } from "./utils/tool-registry.js";
 import { ErrorSanitizer } from "./utils/error-sanitizer.js";
-import { SecureTransport, McpTransport } from "./transport/index.js";
+import { SecureTransport, McpTransport, createSecureHttpServer, HttpServerOptions } from "./transport/index.js";
+import type { Server } from 'node:http';
 import { SecurityLogger } from "./utils/security-logger.js";
 import { normalizeRequest } from "./utils/request-normalizer.js";
 import type { ValidationResult, PolicyContext } from '../types/index.js';
@@ -224,6 +225,25 @@ class SecureMcpServer {
     // SAFETY: SecureTransport implements the same interface as SDK transport but with
     // different type signature. The assertion bridges our wrapper to the SDK's expected type.
     return this._mcpServer.connect(this._wrappedTransport as unknown as Parameters<McpServer['connect']>[0]);
+  }
+
+  /**
+   * Create standalone HTTP server with security validation.
+   * Uses node:http directly for zero external dependencies.
+   *
+   * @param options - Server configuration options
+   * @returns Node.js HTTP server (call .listen() to start)
+   *
+   * @example
+   * ```typescript
+   * const httpServer = server.createHttpServer({ endpoint: '/mcp' });
+   * httpServer.listen(3000, () => {
+   *   console.log('MCP server listening on http://localhost:3000/mcp');
+   * });
+   * ```
+   */
+  createHttpServer(options: HttpServerOptions = {}): Server {
+    return createSecureHttpServer(this as unknown as Parameters<typeof createSecureHttpServer>[0], options);
   }
 
   async close(): Promise<void> {
@@ -530,3 +550,4 @@ class SecureMcpServer {
 }
 
 export { SecureMcpServer };
+export type { HttpServerOptions };

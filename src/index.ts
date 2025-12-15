@@ -8,13 +8,19 @@ export {
   // Layer 5 exports for advanced configuration
   ContextualValidationLayer,
   ContextualConfigBuilder,
-  createContextualLayer
+  createContextualLayer,
+  // HTTP transport
+  createSecureHttpServer,
+  createSecureHttpHandler
 } from "./security/index.js";
 
 // Re-export types from security module
 export type {
   ServerInfo,
   SecureMcpServerOptions,
+  HttpServerOptions,
+  HttpHandlerOptions,
+  SecureHttpHandler,
   McpTransport,
   McpMessage,
   TransportValidationResult,

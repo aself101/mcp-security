@@ -3,7 +3,7 @@
  */
 
 import { SecureMcpServer } from "./mcp-secure-server.js";
-import { SecureTransport } from "./transport/index.js";
+import { SecureTransport, createSecureHttpServer, createSecureHttpHandler } from "./transport/index.js";
 import ContextualValidationLayer, {
   ContextualConfigBuilder,
   createContextualLayer
@@ -45,14 +45,34 @@ export { ContextualConfigBuilder };
  */
 export { createContextualLayer };
 
+/**
+ * Creates a standalone HTTP server with security validation.
+ * Uses node:http directly for zero external dependencies.
+ * @param secureMcpServer - SecureMcpServer instance
+ * @param options - Server configuration options
+ * @returns Node.js HTTP server (call .listen() to start)
+ */
+export { createSecureHttpServer };
+
+/**
+ * Creates an HTTP request handler with security validation.
+ * Use this for composing multiple MCP endpoints on a single server.
+ * @param secureMcpServer - SecureMcpServer instance
+ * @param options - Handler configuration options
+ * @returns Request handler function (req, res) => Promise<void>
+ */
+export { createSecureHttpHandler };
+
 // Re-export types for consumers
-export type { ServerInfo, SecureMcpServerOptions } from "./mcp-secure-server.js";
+export type { ServerInfo, SecureMcpServerOptions, HttpServerOptions } from "./mcp-secure-server.js";
 export type {
   McpTransport,
   McpMessage,
   TransportValidationResult,
   TransportValidator,
   TransportValidationContext,
-  SecureTransportOptions
+  SecureTransportOptions,
+  HttpHandlerOptions,
+  SecureHttpHandler
 } from "./transport/index.js";
 export type { ContextualLayerOptions } from "./layers/layer5-contextual.js";

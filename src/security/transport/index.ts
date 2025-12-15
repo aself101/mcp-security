@@ -12,3 +12,6 @@ export type {
   TransportValidationContext,
   SecureTransportOptions
 } from './secure-transport.js';
+
+export { createSecureHttpServer, createSecureHttpHandler } from './http-server.js';
+export type { HttpServerOptions, HttpHandlerOptions, SecureHttpHandler } from './http-server.js';

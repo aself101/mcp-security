@@ -69,6 +69,7 @@ Full TypeScript support with exported types for all parameters, configurations, 
 - [Quick Start](#quick-start)
 - [Configuration](#configuration)
 - [API Reference](#api-reference)
+- [HTTP Transport](#http-transport)
 - [Layer 5 Customization](#layer-5-customization)
 - [Security Features](#security-features)
 - [Attack Coverage](#attack-coverage)
@@ -89,9 +90,11 @@ Example MCP servers demonstrating the security framework. Each server includes i
 | [cli-wrapper-server](cookbook/cli-wrapper-server) | Safe CLI tool wrapping with command injection prevention | Git status, image resize, PDF metadata, video encode | None |
 | [database-server](cookbook/database-server) | Secure database operations with SQL injection prevention | User queries, order creation, report generation | None |
 | [filesystem-server](cookbook/filesystem-server) | Protected file system access with path traversal prevention | Read files, list directories, search files | None |
+| [http-server](cookbook/http-server) | Simple HTTP transport with `createHttpServer()` | Calculator, echo | None |
 | [image-gen-server](cookbook/image-gen-server) | Unified image generation across 5 providers (BFL, Google, Ideogram, OpenAI, Stability) | Generate, edit, upscale, describe images | API keys |
 | [kenpom-server](cookbook/kenpom-server) | College basketball analytics and efficiency ratings | Ratings, schedules, scouting reports, player stats | KenPom login |
 | [monitoring-server](cookbook/monitoring-server) | Observability with metrics, audit logging, and alerts | Security metrics, audit log, alerts, Prometheus export | None |
+| [multi-endpoint-server](cookbook/multi-endpoint-server) | Multiple HTTP endpoints with `createSecureHttpHandler()` | Admin (list-users, system-stats), Public (health, status) | None |
 | [nba-server](cookbook/nba-server) | NBA stats, live scores, and player data | Player stats, box scores, live scoreboard | None |
 | [transaction-server](cookbook/transaction-server) | Method chaining enforcement for secure transaction workflows | Session, accounts, prepare/confirm/execute transactions | None |
 
@@ -636,12 +639,106 @@ const secureTransport = new SecureTransport(
 );
 ```
 
+### HTTP Transport
+
+For remote MCP servers, use the built-in HTTP transport with security validation. Zero external dependencies - uses `node:http` directly.
+
+```typescript
+import { SecureMcpServer } from 'mcp-security';
+import { z } from 'zod';
+
+const server = new SecureMcpServer(
+  { name: 'my-server', version: '1.0.0' },
+  { enableLogging: true }
+);
+
+server.tool('add', 'Add two numbers', {
+  a: z.number(),
+  b: z.number()
+}, async ({ a, b }) => ({
+  content: [{ type: 'text', text: `${a + b}` }]
+}));
+
+// Create HTTP server with security validation
+const httpServer = server.createHttpServer({ endpoint: '/mcp' });
+httpServer.listen(3000, () => {
+  console.log('MCP server listening on http://localhost:3000/mcp');
+});
+```
+
+**Configuration options:**
+
+```typescript
+interface HttpServerOptions {
+  endpoint?: string;      // MCP endpoint path (default: '/mcp')
+  maxBodySize?: number;   // Max body size in bytes (default: 51200 = 50KB)
+}
+```
+
+**Session ID handling:**
+
+| Source | Value | Used By |
+|--------|-------|---------|
+| `Mcp-Session-Id` header | Client-provided | Layer 3 rate limiting, Layer 4 quotas |
+| Missing header | `'stateless'` | Shared limits across all requests |
+
+**Standalone function:**
+
+```typescript
+import { SecureMcpServer, createSecureHttpServer } from 'mcp-security';
+
+const server = new SecureMcpServer({ name: 'x', version: '1.0' });
+const httpServer = createSecureHttpServer(server, { endpoint: '/api/mcp' });
+httpServer.listen(8080);
+```
+
+**Multiple endpoints:**
+
+For services exposing multiple MCP servers on different paths, use `createSecureHttpHandler` to compose your own routing:
+
+```typescript
+import { SecureMcpServer, createSecureHttpHandler } from 'mcp-security';
+import { createServer } from 'node:http';
+
+// Create separate MCP servers with different tools/permissions
+const adminServer = new SecureMcpServer({ name: 'admin', version: '1.0' });
+const publicServer = new SecureMcpServer({ name: 'public', version: '1.0' });
+
+// Register tools on each server
+adminServer.tool('delete-user', ...);
+publicServer.tool('get-status', ...);
+
+// Create handlers (validates requests, forwards to MCP SDK transport)
+const adminHandler = createSecureHttpHandler(adminServer);
+const publicHandler = createSecureHttpHandler(publicServer);
+
+// Compose with custom routing
+const httpServer = createServer(async (req, res) => {
+  if (req.url?.startsWith('/api/admin')) return adminHandler(req, res);
+  if (req.url?.startsWith('/api/public')) return publicHandler(req, res);
+  res.writeHead(404).end(JSON.stringify({ error: 'Not found' }));
+});
+
+httpServer.listen(3000);
+```
+
+| Function | Purpose |
+|----------|---------|
+| `createSecureHttpServer` | Single endpoint, includes routing |
+| `createSecureHttpHandler` | Request handler only, you provide routing |
+
+**CORS:** Add headers manually or wrap with a CORS middleware.
+
+**HTTPS:** Use `node:https` with the same pattern, or deploy behind a reverse proxy.
+
 ### Available Exports
 
 ```typescript
 import {
   SecureMcpServer,            // Main secure server class
   SecureTransport,            // Transport wrapper
+  createSecureHttpServer,     // HTTP server factory (single endpoint)
+  createSecureHttpHandler,    // HTTP handler factory (multi-endpoint)
   ContextualValidationLayer,  // Layer 5 class
   ContextualConfigBuilder,    // Builder for Layer 5 config
   createContextualLayer       // Factory for Layer 5
@@ -652,6 +749,8 @@ import {
 |--------|-------------|
 | `SecureMcpServer` | Drop-in replacement for McpServer with 5-layer security |
 | `SecureTransport` | Transport wrapper for message-level validation |
+| `createSecureHttpServer` | HTTP server factory with security validation |
+| `createSecureHttpHandler` | HTTP handler for composing multi-endpoint servers |
 | `ContextualValidationLayer` | Layer 5 class for advanced customization |
 | `ContextualConfigBuilder` | Builder for Layer 5 configuration |
 | `createContextualLayer` | Factory function for Layer 5 with defaults |
