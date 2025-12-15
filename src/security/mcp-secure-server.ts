@@ -92,6 +92,8 @@ export interface SecureMcpServerOptions {
   methodSpec?: MethodSpec;
   /** Chaining rules for Layer 4 */
   chainingRules?: ChainingRule[];
+  /** Enforce method chaining (disabled by default) */
+  enforceChaining?: boolean;
   /** Quotas for Layer 4 */
   quotas?: Record<string, QuotaLimits>;
   /** Quota provider for Layer 4 */
@@ -196,6 +198,7 @@ class SecureMcpServer {
         resourcePolicy: options.resourcePolicy ?? defaultResourcePolicy(),
         methodSpec: options.methodSpec,
         chainingRules: options.chainingRules,
+        enforceChaining: options.enforceChaining ?? false,
         quotas: options.quotas,
         quotaProvider: options.quotaProvider ?? new InMemoryQuotaProvider({
           clockSkewMs: options.clockSkewMs ?? 1000

@@ -25,6 +25,7 @@ export interface SemanticsLayerOptions extends ValidationLayerOptions {
   resourcePolicy?: Partial<ResourcePolicy>;
   methodSpec?: Partial<MethodSpec>;
   chainingRules?: ChainingRule[];
+  enforceChaining?: boolean;
   quotas?: Record<string, QuotaLimits>;
   quotaProvider?: QuotaProvider;
   clockSkewMs?: number;
@@ -62,12 +63,23 @@ interface SizeResult extends ValidationResult {
   bytes?: number;
 }
 
+/** Session entry for method chaining */
+interface SessionEntry {
+  method: string;
+  timestamp: number;
+}
+
 export default class SemanticsValidationLayer extends ValidationLayer {
   private tools: Map<string, ToolSpec>;
   private res: ResourcePolicy;
   private methods: MethodSpec;
+  private chaining: ChainingRule[];
+  private enforceChaining: boolean;
   private quotas: Record<string, QuotaLimits>;
   private quotaProvider: QuotaProvider;
+  private sessions: Map<string, SessionEntry>;
+  private maxSessions: number;
+  private sessionTtlMs: number;
 
   constructor(options: SemanticsLayerOptions = {}) {
     super(options);
@@ -85,11 +97,17 @@ export default class SemanticsValidationLayer extends ValidationLayer {
 
     this.res = normalized.resourcePolicy;
     this.methods = normalized.methodSpec;
+    this.chaining = normalized.chainingRules;
+    this.enforceChaining = options.enforceChaining ?? false; // Disabled by default
 
     this.quotas = options.quotas ?? {};
     this.quotaProvider = options.quotaProvider ?? new InMemoryQuotaProvider({
       clockSkewMs: options.clockSkewMs ?? 1000
     });
+
+    this.sessions = new Map();
+    this.maxSessions = options.maxSessions ?? 10000;
+    this.sessionTtlMs = options.sessionTtlMs ?? 30 * 60 * 1000; // 30 minutes default
 
     this.logDebug('SemanticsValidationLayer initialized');
   }
@@ -113,7 +131,56 @@ export default class SemanticsValidationLayer extends ValidationLayer {
     const sideEffectResult = this.checkSideEffectsAndEgress(msg, context);
     if (!sideEffectResult.passed) return sideEffectResult;
 
+    if (this.enforceChaining) {
+      const chainResult = this.checkMethodChaining(msg, context);
+      if (!chainResult.passed) return chainResult;
+    }
+
     return this.createSuccessResult();
+  }
+
+  private getSessionKey(context: SemanticsContext): string {
+    return context.sessionId ?? context.clientId ?? 'default';
+  }
+
+  private checkMethodChaining(message: McpMessage, context: SemanticsContext): ValidationResult {
+    const sessionKey = this.getSessionKey(context);
+    const now = Date.now();
+
+    // Clean up expired sessions periodically
+    if (this.sessions.size > this.maxSessions) {
+      this.cleanExpiredSessions(now);
+    }
+
+    const entry = this.sessions.get(sessionKey);
+    const previousMethod = entry && (now - entry.timestamp < this.sessionTtlMs) ? entry.method : '*';
+    const currentMethod = message.method ?? '';
+
+    const allowed = this.chaining.some(rule =>
+      (rule.from === previousMethod || rule.from === '*') && rule.to === currentMethod
+    );
+
+    if (allowed) {
+      this.sessions.set(sessionKey, { method: currentMethod, timestamp: now });
+    }
+
+    if (!allowed) {
+      return this.createFailureResult(
+        `Method chaining not allowed: ${previousMethod} → ${currentMethod}`,
+        'MEDIUM',
+        'CHAIN_VIOLATION'
+      );
+    }
+
+    return this.createSuccessResult();
+  }
+
+  private cleanExpiredSessions(now: number): void {
+    for (const [key, entry] of this.sessions) {
+      if (now - entry.timestamp > this.sessionTtlMs) {
+        this.sessions.delete(key);
+      }
+    }
   }
 
   private checkMethodSemantics(message: McpMessage): ValidationResult {

@@ -318,3 +318,112 @@ function createToolCallMessage(toolName, args = {}) {
     }
   };
 }
+
+describe('Method Chaining Validation', () => {
+  let layer;
+
+  beforeEach(() => {
+    layer = new SemanticsValidationLayer({
+      enforceChaining: true,
+      toolRegistry: [
+        { name: 'test-tool', sideEffects: 'none' }
+      ]
+    });
+  });
+
+  it('should be disabled by default', async () => {
+    const defaultLayer = new SemanticsValidationLayer({
+      toolRegistry: [{ name: 'test-tool', sideEffects: 'none' }]
+    });
+
+    // Calling tools/list without initialize should pass when chaining disabled
+    const message = { jsonrpc: '2.0', method: 'tools/list', id: 1 };
+    const result = await defaultLayer.validate(message, { sessionId: 'default-test' });
+    expect(result.passed).toBe(true);
+  });
+
+  it('should allow initialize as first method', async () => {
+    const message = {
+      jsonrpc: '2.0',
+      method: 'initialize',
+      id: 1,
+      params: {}
+    };
+
+    const result = await layer.validate(message, { sessionId: 'init-test' });
+    expect(result.passed).toBe(true);
+  });
+
+  it('should block tools/list before initialize', async () => {
+    const message = { jsonrpc: '2.0', method: 'tools/list', id: 1 };
+
+    const result = await layer.validate(message, { sessionId: 'chain-test-1' });
+    expect(result.passed).toBe(false);
+    expect(result.violationType).toBe('CHAIN_VIOLATION');
+    expect(result.reason).toMatch(/Method chaining not allowed.*\*.*tools\/list/);
+  });
+
+  it('should allow tools/list after initialize', async () => {
+    const sessionId = 'chain-test-2';
+
+    // First: initialize
+    const initMsg = { jsonrpc: '2.0', method: 'initialize', id: 1, params: {} };
+    const initResult = await layer.validate(initMsg, { sessionId });
+    expect(initResult.passed).toBe(true);
+
+    // Then: tools/list
+    const listMsg = { jsonrpc: '2.0', method: 'tools/list', id: 2 };
+    const listResult = await layer.validate(listMsg, { sessionId });
+    expect(listResult.passed).toBe(true);
+  });
+
+  it('should allow tools/call after tools/list', async () => {
+    const sessionId = 'chain-test-3';
+
+    // initialize → tools/list → tools/call
+    await layer.validate({ jsonrpc: '2.0', method: 'initialize', id: 1, params: {} }, { sessionId });
+    await layer.validate({ jsonrpc: '2.0', method: 'tools/list', id: 2 }, { sessionId });
+
+    const callMsg = createToolCallMessage('test-tool');
+    const result = await layer.validate(callMsg, { sessionId });
+    expect(result.passed).toBe(true);
+  });
+
+  it('should allow repeated tools/call', async () => {
+    const sessionId = 'chain-test-4';
+
+    // initialize → tools/list → tools/call → tools/call
+    await layer.validate({ jsonrpc: '2.0', method: 'initialize', id: 1, params: {} }, { sessionId });
+    await layer.validate({ jsonrpc: '2.0', method: 'tools/list', id: 2 }, { sessionId });
+    await layer.validate(createToolCallMessage('test-tool'), { sessionId });
+
+    const result = await layer.validate(createToolCallMessage('test-tool'), { sessionId });
+    expect(result.passed).toBe(true);
+  });
+
+  it('should allow ping from any state', async () => {
+    const sessionId = 'ping-test';
+
+    // ping is allowed from * (any state)
+    const pingMsg = { jsonrpc: '2.0', method: 'ping', id: 1 };
+    const result = await layer.validate(pingMsg, { sessionId });
+    expect(result.passed).toBe(true);
+  });
+
+  it('should track sessions independently', async () => {
+    // Session A initializes
+    await layer.validate({ jsonrpc: '2.0', method: 'initialize', id: 1, params: {} }, { sessionId: 'session-a' });
+
+    // Session B tries tools/list without initialize - should fail
+    const result = await layer.validate({ jsonrpc: '2.0', method: 'tools/list', id: 1 }, { sessionId: 'session-b' });
+    expect(result.passed).toBe(false);
+    expect(result.violationType).toBe('CHAIN_VIOLATION');
+  });
+
+  it('should use clientId as fallback for session key', async () => {
+    // Using clientId instead of sessionId
+    await layer.validate({ jsonrpc: '2.0', method: 'initialize', id: 1, params: {} }, { clientId: 'client-1' });
+    const result = await layer.validate({ jsonrpc: '2.0', method: 'tools/list', id: 2 }, { clientId: 'client-1' });
+    expect(result.passed).toBe(true);
+  });
+});

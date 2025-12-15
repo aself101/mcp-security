@@ -32,7 +32,8 @@ export type {
   ValidationContext,
   SecurityOptions,
   ToolSpec,
-  ResourcePolicy
+  ResourcePolicy,
+  ChainingRule
 } from "./types/index.js";
 
 // Re-export type guards
