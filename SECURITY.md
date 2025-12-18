@@ -176,7 +176,7 @@ The MCP Security Framework protects Model Context Protocol (MCP) servers from ma
                     ▼
 ┌─────────────────────────────┐
 │      LAYER 2: CONTENT       │─────────────────────────────────────────────────┐
-│  • 18 attack pattern groups │                                                 │
+│  • 19 attack pattern groups │                                                 │
 │  • Canonicalization         │        ┌─────────────────────────────────────┐ │
 │  • Multi-encoding detection │        │        PATTERN CATEGORIES           │ │
 │  • Input size limits (2MB)  │        │  • pathTraversal  • xss            │ │
@@ -223,7 +223,9 @@ The MCP Security Framework protects Model Context Protocol (MCP) servers from ma
 | Component | Responsibility | Location |
 |-----------|----------------|----------|
 | `SecureMcpServer` | Main entry point, pipeline orchestration | `mcp-secure-server.ts` |
-| `SecureTransport` | Message interception, error handling | `transport/secure-transport.ts` |
+| `SecureTransport` | Message interception, error handling (stdio) | `transport/secure-transport.ts` |
+| `createSecureHttpServer` | HTTP transport with 5-layer validation | `transport/http-server.ts` |
+| `createSecureHttpHandler` | HTTP request handler for custom servers | `transport/http-server.ts` |
 | `ValidationPipeline` | Layer sequencing, result aggregation | `utils/validation-pipeline.ts` |
 | `ErrorSanitizer` | Information disclosure prevention | `utils/error-sanitizer.ts` |
 | `RequestNormalizer` | Input format standardization | `utils/request-normalizer.ts` |
@@ -311,7 +313,7 @@ The MCP Security Framework protects Model Context Protocol (MCP) servers from ma
 
 | Threat | Mitigation | Implementation |
 |--------|------------|----------------|
-| Injection attacks | Pattern-based detection | 18 attack categories, 200+ patterns |
+| Injection attacks | Pattern-based detection | 19 attack categories, 200+ patterns |
 | Encoding evasion | Multi-layer canonicalization | URL, HTML, Unicode, hex decoding |
 | ReDoS | Input size limits | `MAX_CONTENT_INPUT_SIZE: 2MB` |
 | Memory exhaustion | Decode size limits | `MAX_URL_DECODE_INPUT_SIZE: 1MB` |
@@ -409,7 +411,7 @@ The MCP Security Framework protects Model Context Protocol (MCP) servers from ma
 If you discover a security vulnerability in the MCP Security Framework:
 
 1. **Do NOT** disclose publicly until fixed
-2. **Email**: security@example.com (update with actual contact)
+2. **Report**: Open a [GitHub Security Advisory](https://github.com/aself101/mcp-secure-server/security/advisories/new)
 3. **Include**:
    - Description of the vulnerability
    - Steps to reproduce
@@ -463,41 +465,100 @@ Security updates are released as patch versions (e.g., `0.9.1`) and announced th
 
 ## Appendix: Violation Types Reference
 
-| Violation Type | Severity | Layer | Description |
-|----------------|----------|-------|-------------|
-| `INVALID_MESSAGE` | CRITICAL | 1 | Null, undefined, or non-object message |
-| `INVALID_PROTOCOL` | HIGH | 1 | Invalid JSON-RPC 2.0 structure |
-| `SIZE_LIMIT_EXCEEDED` | HIGH | 1 | Message exceeds size limit |
-| `DANGEROUS_ENCODING` | HIGH | 1 | Null bytes or dangerous unicode detected |
-| `COMMAND_INJECTION` | CRITICAL | 2 | Shell command execution attempt |
-| `SQL_INJECTION` | HIGH | 2 | Database query manipulation |
-| `PATH_TRAVERSAL` | HIGH | 2 | Directory escape attempt |
-| `XSS_ATTEMPT` | HIGH | 2 | Cross-site scripting |
-| `SSRF_ATTEMPT` | CRITICAL | 2 | Server-side request forgery |
-| `PROTOTYPE_POLLUTION` | CRITICAL | 2 | JavaScript prototype manipulation |
-| `DESERIALIZATION_INJECTION` | CRITICAL | 2 | Unsafe deserialization |
-| `XML_ENTITY_ATTACK` | CRITICAL | 2 | XXE or Billion Laughs |
-| `NOSQL_INJECTION` | HIGH | 2 | NoSQL database attacks |
-| `GRAPHQL_INJECTION` | HIGH | 2 | GraphQL introspection/abuse |
-| `CRLF_INJECTION` | HIGH | 2 | HTTP header injection |
-| `SCRIPT_INJECTION` | HIGH | 2 | Python/Node script injection |
-| `BUFFER_OVERFLOW_ATTEMPT` | CRITICAL | 2 | Buffer overflow patterns (NOP sleds, format strings) |
-| `LOLBINS_EXECUTION` | CRITICAL | 2 | Living-off-the-land binary abuse |
-| `RATE_LIMIT_EXCEEDED` | HIGH | 3 | Too many requests |
-| `BURST_ACTIVITY` | HIGH | 3 | Suspicious request burst |
-| `AUTOMATED_TIMING` | MEDIUM | 3 | Automated timing pattern detected |
-| `SUSPICIOUS_METHOD` | LOW | 3 | Probing/reconnaissance method pattern |
-| `OVERSIZED_MESSAGE` | MEDIUM | 3 | Suspiciously large message |
-| `QUOTA_EXCEEDED` | HIGH | 4 | Tool usage quota exceeded |
-| `TOOL_NOT_ALLOWED` | HIGH | 4 | Tool not in registry |
-| `TOOL_EGRESS_LIMIT` | MEDIUM | 4 | Tool egress limit exceeded |
-| `SIDE_EFFECT_NOT_ALLOWED` | HIGH | 4 | Tool side effect not permitted |
-| `RESOURCE_POLICY_VIOLATION` | HIGH | 4 | Unauthorized resource access |
-| `DOMAIN_RESTRICTION_VIOLATION` | MEDIUM | 5 | Blocked domain access |
-| `BLOCKED_DOMAIN` | HIGH | 5 | Domain on blocklist |
-| `DOMAIN_NOT_ALLOWED` | MEDIUM | 5 | Domain not on allowlist |
-| `DANGEROUS_URL_SCHEME` | HIGH | 5 | javascript:, vbscript:, data: schemes |
-| `SENSITIVE_DATA_EXPOSURE` | HIGH | 5 | PII or secrets in response |
+### Generic Violations
+
+| Violation Type | Severity | Description |
+|----------------|----------|-------------|
+| `UNKNOWN` | MEDIUM | Unknown or unclassified violation |
+| `VALIDATION_ERROR` | MEDIUM | General validation failure |
+| `INTERNAL_ERROR` | HIGH | Internal processing error |
+| `POLICY_VIOLATION` | HIGH | Generic policy violation |
+
+### Layer 1: Structure Violations
+
+| Violation Type | Severity | Description |
+|----------------|----------|-------------|
+| `INVALID_MESSAGE` | CRITICAL | Null, undefined, or non-object message |
+| `INVALID_PROTOCOL` | HIGH | Invalid JSON-RPC 2.0 structure |
+| `INVALID_METHOD` | HIGH | Invalid or disallowed method name |
+| `INVALID_SCHEMA` | HIGH | Message fails schema validation |
+| `SIZE_LIMIT_EXCEEDED` | HIGH | Message exceeds size limit |
+| `STRING_LIMIT_EXCEEDED` | HIGH | String parameter exceeds length limit |
+| `PARAM_LIMIT_EXCEEDED` | HIGH | Too many parameters in request |
+| `MISSING_REQUIRED_PARAM` | HIGH | Required parameter missing |
+| `MALFORMED_MESSAGE` | HIGH | Message structure is malformed |
+
+### Layer 2: Content Violations
+
+| Violation Type | Severity | Description |
+|----------------|----------|-------------|
+| `DANGEROUS_ENCODING` | HIGH | Null bytes or dangerous unicode detected |
+| `SUSPICIOUS_ENCODING` | MEDIUM | Unusual encoding patterns detected |
+| `ENCODING_EVASION` | HIGH | Encoding used to bypass detection |
+| `PATH_TRAVERSAL` | HIGH | Directory escape attempt |
+| `COMMAND_INJECTION` | CRITICAL | Shell command execution attempt |
+| `SQL_INJECTION` | HIGH | Database query manipulation |
+| `NOSQL_INJECTION` | HIGH | NoSQL database attacks |
+| `GRAPHQL_INJECTION` | HIGH | GraphQL introspection/abuse |
+| `XSS_ATTEMPT` | HIGH | Cross-site scripting |
+| `SCRIPT_INJECTION` | HIGH | Python/Node script injection |
+| `CSS_INJECTION` | HIGH | Malicious CSS injection |
+| `CRLF_INJECTION` | HIGH | HTTP header injection |
+| `SSRF_ATTEMPT` | CRITICAL | Server-side request forgery |
+| `BUFFER_OVERFLOW_ATTEMPT` | CRITICAL | Buffer overflow patterns (NOP sleds, format strings) |
+| `DESERIALIZATION_INJECTION` | CRITICAL | Unsafe deserialization |
+| `PROTOTYPE_POLLUTION` | CRITICAL | JavaScript prototype manipulation |
+| `XML_ENTITY_ATTACK` | CRITICAL | XXE or Billion Laughs |
+| `LOLBINS_EXECUTION` | CRITICAL | Living-off-the-land binary abuse |
+| `CSV_INJECTION` | HIGH | CSV formula injection |
+| `SVG_INJECTION` | HIGH | Malicious SVG content |
+| `SECRET_EXPOSURE` | HIGH | API keys, tokens, credentials in request |
+| `DANGEROUS_DATA_URI` | HIGH | Malicious data URI scheme |
+| `BASE64_INJECTION` | HIGH | Malicious base64-encoded content |
+| `NESTED_DATA_URI` | HIGH | Nested data URI evasion attempt |
+| `SUSPICIOUS_TEST_DATA` | LOW | Suspicious test/debug data patterns |
+| `EXCESSIVE_NESTING` | MEDIUM | Deeply nested object structure |
+
+### Layer 3: Behavior Violations
+
+| Violation Type | Severity | Description |
+|----------------|----------|-------------|
+| `REQUEST_FLOODING` | HIGH | Excessive request volume |
+| `RATE_LIMIT_EXCEEDED` | HIGH | Too many requests per time window |
+| `BURST_ACTIVITY` | HIGH | Suspicious request burst |
+| `OVERSIZED_MESSAGE` | MEDIUM | Suspiciously large message |
+| `AUTOMATED_TIMING` | MEDIUM | Automated timing pattern detected |
+| `SUSPICIOUS_METHOD` | LOW | Probing/reconnaissance method pattern |
+| `OVERSIZED_PARAMS` | MEDIUM | Parameters exceed size threshold |
+| `EXCESSIVE_PARAM_COUNT` | MEDIUM | Too many parameters |
+| `PARAM_SERIALIZATION_ERROR` | MEDIUM | Parameter serialization failed |
+
+### Layer 4: Semantic Violations
+
+| Violation Type | Severity | Description |
+|----------------|----------|-------------|
+| `QUOTA_EXCEEDED` | HIGH | Tool usage quota exceeded |
+| `TOOL_NOT_ALLOWED` | HIGH | Tool not in registry |
+| `INVALID_TOOL_ARGUMENTS` | HIGH | Tool arguments fail validation |
+| `TOOL_EGRESS_LIMIT` | MEDIUM | Tool egress limit exceeded |
+| `ARGS_EGRESS_LIMIT` | MEDIUM | Argument size exceeds egress limit |
+| `ARG_SERIALIZATION_ERROR` | MEDIUM | Argument serialization failed |
+| `SIDE_EFFECT_NOT_ALLOWED` | HIGH | Tool side effect not permitted |
+| `RESOURCE_POLICY_VIOLATION` | HIGH | Unauthorized resource access |
+| `RESOURCE_EGRESS_LIMIT` | MEDIUM | Resource response exceeds limit |
+| `CHAIN_VIOLATION` | HIGH | Tool chaining rule violation |
+| `INVALID_MCP_METHOD` | HIGH | Invalid MCP method call |
+
+### Layer 5: Contextual Violations
+
+| Violation Type | Severity | Description |
+|----------------|----------|-------------|
+| `DOMAIN_RESTRICTION_VIOLATION` | MEDIUM | Blocked domain access |
+| `BLOCKED_DOMAIN` | HIGH | Domain on blocklist |
+| `DOMAIN_NOT_ALLOWED` | MEDIUM | Domain not on allowlist |
+| `DANGEROUS_URL_SCHEME` | HIGH | javascript:, vbscript:, data: schemes |
+| `SENSITIVE_DATA_EXPOSURE` | HIGH | PII or secrets in response |
+| `VALIDATOR_ERROR` | MEDIUM | Custom validator error |
 
 ---
 

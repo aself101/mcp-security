@@ -873,52 +873,12 @@ const server = new SecureMcpServer(
 
 ## Security Features
 
-### Attack Detection Summary
-
-| Category | Attacks Detected | Severity |
-|----------|-----------------|----------|
-| **Injection** | SQL, NoSQL, Command, LDAP, XPath | CRITICAL/HIGH |
-| **Path Traversal** | `../`, encoded variants, null bytes | HIGH |
-| **XSS** | Script tags, event handlers, javascript: | HIGH |
-| **Prototype Pollution** | `__proto__`, constructor pollution | HIGH |
-| **XML Attacks** | XXE, Billion Laughs, entity expansion | CRITICAL |
-| **SSRF** | Cloud metadata, internal IPs, localhost | HIGH |
-| **Deserialization** | Java, PHP, Python, .NET, Ruby, JNDI | CRITICAL |
-| **DoS** | Rate limiting, burst detection, size limits | MEDIUM/HIGH |
-
-### Security Best Practices Applied
-
-- **Defense in Depth** - 5 layers of validation
-- **Fail Secure** - Blocks requests on any validation failure
-- **Least Privilege** - Configurable resource access policies
-- **Input Validation** - All inputs validated before processing
-- **Output Encoding** - Response validation prevents data leaks
-- **Error Sanitization** - No internal details in error responses
-- **Rate Limiting** - Prevents abuse and DoS attacks
-- **Logging** - Optional security event logging for audit
-
-### SSRF Protection
-
-The framework blocks requests to:
-- Localhost (`127.0.0.1`, `::1`, `localhost`)
-- Private IP ranges (`10.x.x.x`, `192.168.x.x`, `172.16-31.x.x`)
-- Link-local addresses (`169.254.x.x`)
-- Cloud metadata endpoints:
-  - AWS: `169.254.169.254`
-  - GCP: `metadata.google.internal`
-  - Azure: `169.254.169.254`
-
-### Error Sanitization
-
-All error responses are sanitized to prevent information disclosure:
-
-```typescript
-// Internal error
-throw new Error('Database connection failed: host=10.0.0.5, password=secret');
-
-// Client sees
-{ "error": { "code": -32602, "message": "Request validation failed" } }
-```
+See [SECURITY.md](./SECURITY.md) for full security documentation including:
+- Attack detection coverage (injection, XSS, SSRF, deserialization, etc.)
+- Security best practices applied
+- SSRF protection details
+- Error sanitization
+- Reporting vulnerabilities
 
 ## Attack Coverage
 
@@ -1091,13 +1051,17 @@ src/
 ├── index.ts                              # Main entry point
 ├── types/                                # TypeScript type definitions
 │   ├── index.ts
-│   ├── validation.ts
-│   └── config.ts
+│   ├── layers.ts                         # Layer type definitions
+│   ├── messages.ts                       # Message type definitions
+│   ├── policies.ts                       # Policy type definitions
+│   └── validation.ts                     # Validation type definitions
 └── security/
     ├── mcp-secure-server.ts              # SecureMcpServer class
     ├── constants.ts                      # Configuration constants
     ├── transport/
-    │   └── secure-transport.ts           # SecureTransport class
+    │   ├── index.ts                      # Transport exports
+    │   ├── secure-transport.ts           # SecureTransport class (stdio)
+    │   └── http-server.ts                # HTTP transport server
     ├── layers/
     │   ├── layer1-structure.ts           # JSON-RPC validation
     │   ├── layer2-content.ts             # Content/injection detection
@@ -1105,11 +1069,13 @@ src/
     │   ├── layer3-behavior.ts            # Rate limiting
     │   ├── layer4-semantics.ts           # Tool contracts
     │   ├── layer5-contextual.ts          # Custom validators
+    │   ├── contextual-config-builder.ts  # Layer 5 configuration
     │   ├── validation-layer-base.ts      # Base class
     │   └── layer-utils/
     │       ├── content/
     │       │   ├── canonicalize.ts       # Text normalization
-    │       │   ├── patterns/             # Attack pattern definitions
+    │       │   ├── dangerous-patterns.ts # Attack pattern definitions
+    │       │   ├── patterns/             # Pattern modules
     │       │   └── utils/                # Helper utilities
     │       └── semantics/                # Semantic utilities
     └── utils/
@@ -1118,6 +1084,19 @@ src/
         ├── error-sanitizer.ts            # Safe error responses
         ├── request-normalizer.ts         # Request normalization
         └── tool-registry.ts              # Tool management
+
+cookbook/                                 # Example MCP servers
+├── http-server/                          # HTTP transport example
+├── multi-endpoint-server/                # Multi-endpoint example
+├── image-gen-server/                     # Image generation APIs
+├── kenpom-server/                        # Sports analytics
+├── api-wrapper-server/                   # Safe API wrapper
+├── database-server/                      # SQL injection prevention
+├── filesystem-server/                    # Path traversal prevention
+├── cli-wrapper-server/                   # Command injection prevention
+├── monitoring-server/                    # Security metrics/alerts
+├── transaction-server/                   # State machine workflows
+└── advanced-validation-server/           # Advanced security demos
 ```
 
 ## Troubleshooting

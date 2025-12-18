@@ -196,6 +196,40 @@ export const attackConfigs: readonly AttackConfig[] = [
     ],
     violationType: 'XML_ENTITY_ATTACK',
     confidence: 0.9
+  },
+  {
+    name: 'CSV injection',
+    categories: [
+      ATTACK_PATTERNS.csv.formula,
+      ATTACK_PATTERNS.csv.payloads
+    ],
+    violationType: 'CSV_INJECTION',
+    confidence: 0.8
+  },
+  {
+    name: 'SVG injection',
+    categories: [
+      ATTACK_PATTERNS.svg.vectors
+    ],
+    violationType: 'SVG_INJECTION',
+    confidence: 0.85
+  },
+  {
+    name: 'Secret exposure',
+    categories: [
+      ATTACK_PATTERNS.secrets.common
+    ],
+    violationType: 'SECRET_EXPOSURE',
+    confidence: 0.9
+  },
+  {
+    name: 'CSS injection',
+    categories: [
+      ATTACK_PATTERNS.css.expressions,
+      ATTACK_PATTERNS.css.protocolInjection
+    ],
+    violationType: 'CSS_INJECTION',
+    confidence: 0.85
   }
 ] as const;
 
