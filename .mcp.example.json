@@ -1,68 +1,55 @@
 {
-  "_comment": "Copy this file to .mcp.json and update paths for your environment",
+  "_comment": "Copy this file to .mcp.json and update '/path/to' with your actual path",
   "mcpServers": {
-    "image-gen": {
-      "type": "stdio",
+    "database": {
       "command": "node",
-      "args": [
-        "/path/to/mcp-secure-server/cookbook/image-gen-server/dist/index.js"
-      ]
-    },
-    "kenpom": {
-      "type": "stdio",
-      "command": "node",
-      "args": [
-        "/path/to/mcp-secure-server/cookbook/kenpom-server/dist/index.js"
-      ]
-    },
-    "api-wrapper": {
-      "type": "stdio",
-      "command": "node",
-      "args": [
-        "/path/to/mcp-secure-server/cookbook/api-wrapper-server/dist/index.js"
-      ]
+      "args": ["/path/to/mcp-secure-server/cookbook/database-server/dist/index.js"],
+      "cwd": "/path/to/mcp-secure-server/cookbook/database-server"
     },
     "filesystem": {
-      "type": "stdio",
       "command": "node",
-      "args": [
-        "/path/to/mcp-secure-server/cookbook/filesystem-server/dist/index.js"
-      ]
+      "args": ["/path/to/mcp-secure-server/cookbook/filesystem-server/dist/index.js"],
+      "cwd": "/path/to/mcp-secure-server/cookbook/filesystem-server"
     },
-    "database": {
-      "type": "stdio",
+    "api-wrapper": {
       "command": "node",
-      "args": [
-        "/path/to/mcp-secure-server/cookbook/database-server/dist/index.js"
-      ]
-    },
-    "advanced-validation": {
-      "type": "stdio",
-      "command": "node",
-      "args": [
-        "/path/to/mcp-secure-server/cookbook/advanced-validation-server/dist/index.js"
-      ]
-    },
-    "cli-wrapper": {
-      "type": "stdio",
-      "command": "node",
-      "args": [
-        "/path/to/mcp-secure-server/cookbook/cli-wrapper-server/dist/index.js"
-      ]
+      "args": ["/path/to/mcp-secure-server/cookbook/api-wrapper-server/dist/index.js"],
+      "cwd": "/path/to/mcp-secure-server/cookbook/api-wrapper-server"
     },
     "monitoring": {
-      "type": "stdio",
       "command": "node",
-      "args": [
-        "/path/to/mcp-secure-server/cookbook/monitoring-server/dist/index.js"
-      ]
+      "args": ["/path/to/mcp-secure-server/cookbook/monitoring-server/dist/index.js"],
+      "cwd": "/path/to/mcp-secure-server/cookbook/monitoring-server"
     },
     "transaction": {
-      "type": "stdio",
       "command": "node",
-      "args": [
-        "/path/to/mcp-secure-server/cookbook/transaction-server/dist/index.js"
-      ]
+      "args": ["/path/to/mcp-secure-server/cookbook/transaction-server/dist/index.js"],
+      "cwd": "/path/to/mcp-secure-server/cookbook/transaction-server"
+    },
+    "image-gen": {
+      "command": "node",
+      "args": ["/path/to/mcp-secure-server/cookbook/image-gen-server/dist/index.js"],
+      "cwd": "/path/to/mcp-secure-server/cookbook/image-gen-server"
+    },
+    "kenpom": {
+      "command": "node",
+      "args": ["/path/to/mcp-secure-server/cookbook/kenpom-server/dist/index.js"],
+      "cwd": "/path/to/mcp-secure-server/cookbook/kenpom-server"
+    },
+    "cli-wrapper": {
+      "command": "node",
+      "args": ["/path/to/mcp-secure-server/cookbook/cli-wrapper-server/dist/index.js"],
+      "cwd": "/path/to/mcp-secure-server/cookbook/cli-wrapper-server"
+    },
+    "advanced-validation": {
+      "command": "node",
+      "args": ["/path/to/mcp-secure-server/cookbook/advanced-validation-server/dist/index.js"],
+      "cwd": "/path/to/mcp-secure-server/cookbook/advanced-validation-server"
+    },
+    "nba": {
+      "command": "node",
+      "args": ["/path/to/mcp-secure-server/cookbook/nba-server/dist/index.js"],
+      "cwd": "/path/to/mcp-secure-server/cookbook/nba-server"
     }
   }
 }

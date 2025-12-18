@@ -111,10 +111,14 @@ export const lolbins = {
 
 export const csv = {
   formula: [
-    { pattern: /[\u0009\u0020]*[=+\-@]/, name: 'CSV Formula Sigil', severity: 'HIGH' },
-    { pattern: /[\u0009\u0020]*["']?[=+\-@].*/i, name: 'CSV Formula (Quoted)', severity: 'HIGH' }
+    // CSV injection requires formula at START of cell value, often with cmd/DDE payloads
+    { pattern: /^[\t ]*[=+@](?:cmd|powershell|calc|HYPERLINK|IMPORTXML|IMPORTDATA|WEBSERVICE)/i, name: 'CSV Formula Command', severity: 'HIGH' },
+    { pattern: /^[\t ]*-\d+\+\d+\+cmd/i, name: 'CSV Minus Formula', severity: 'HIGH' },
+    { pattern: /^[\t ]*["']?[=+@].*\|.*["']?!A/i, name: 'CSV DDE Payload', severity: 'HIGH' }
   ],
   payloads: [
-    { pattern: /=["']?cmd\|/i, name: 'CSV CMD Pipe', severity: 'HIGH' }
+    { pattern: /=["']?cmd\|/i, name: 'CSV CMD Pipe', severity: 'HIGH' },
+    { pattern: /\+\d+\+\d+\+cmd\|/i, name: 'CSV Plus Formula', severity: 'HIGH' },
+    { pattern: /@SUM\([^)]*https?:/i, name: 'CSV SUM Exfil', severity: 'HIGH' }
   ]
 } as const satisfies Record<string, AttackPattern[]>;
