@@ -7,7 +7,7 @@ This document covers advanced configuration patterns for production deployments.
 ### Multi-tenant file isolation
 
 ```typescript
-import { SecureMcpServer } from 'mcp-security';
+import { SecureMcpServer } from 'mcp-secure-server';
 
 const tenantId = process.env.TENANT_ID;
 
@@ -72,7 +72,7 @@ async function writeFile(args, config) {
 ### Log all file access
 
 ```typescript
-import { SecureMcpServer } from 'mcp-security';
+import { SecureMcpServer } from 'mcp-secure-server';
 import * as fs from 'fs';
 
 const auditLog = fs.createWriteStream('/var/log/file-access.log', { flags: 'a' });

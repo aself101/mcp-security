@@ -106,7 +106,7 @@ npm run build
     "transaction": {
       "command": "node",
       "args": ["dist/index.js"],
-      "cwd": "/path/to/mcp-security/cookbook/transaction-server"
+      "cwd": "/path/to/mcp-secure-server/cookbook/transaction-server"
     }
   }
 }

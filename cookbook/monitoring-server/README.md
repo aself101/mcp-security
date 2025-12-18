@@ -231,7 +231,7 @@ Add to your `prometheus.yml`:
 
 ```yaml
 scrape_configs:
-  - job_name: 'mcp-security'
+  - job_name: 'mcp-secure-server'
     static_configs:
       - targets: ['localhost:9090']
     metrics_path: '/metrics'

@@ -1,6 +1,6 @@
 # Security Demonstration
 
-This document shows attack attempts that are blocked by the mcp-security framework.
+This document shows attack attempts that are blocked by the mcp-secure-server framework.
 
 ## Attack 1: SSRF to AWS Metadata
 

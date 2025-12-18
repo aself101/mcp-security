@@ -5,7 +5,7 @@
  * Shows how to build sophisticated security rules for business applications.
  */
 
-import { SecureMcpServer, ContextualValidationLayer } from 'mcp-security';
+import { SecureMcpServer, ContextualValidationLayer } from 'mcp-secure-server';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
 
 import {

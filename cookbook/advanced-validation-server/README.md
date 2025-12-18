@@ -152,7 +152,7 @@ npm run build
     "advanced-validation": {
       "command": "node",
       "args": ["cookbook/advanced-validation-server/dist/index.js"],
-      "cwd": "/path/to/mcp-security",
+      "cwd": "/path/to/mcp-secure-server",
       "env": {
         "MOCK_COUNTRY": "US"
       }

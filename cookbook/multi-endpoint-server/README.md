@@ -186,7 +186,7 @@ The key to multi-endpoint servers is `createSecureHttpHandler`:
 
 ```typescript
 import { createServer } from 'node:http';
-import { createSecureHttpHandler } from 'mcp-security';
+import { createSecureHttpHandler } from 'mcp-secure-server';
 
 // Create separate MCP servers
 const adminServer = new SecureMcpServer({ name: 'admin', version: '1.0' });

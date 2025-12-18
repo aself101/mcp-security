@@ -4,7 +4,7 @@ An MCP server demonstrating safe wrapping of third-party REST APIs with domain r
 
 ## Overview
 
-This cookbook shows how to securely wrap external APIs using the `mcp-security` framework. It demonstrates:
+This cookbook shows how to securely wrap external APIs using the `mcp-secure-server` framework. It demonstrates:
 
 - **Domain Restrictions**: Only allowed API domains can be accessed
 - **Per-Tool Rate Limiting**: Each tool has its own rate limit based on cost/risk
@@ -332,7 +332,7 @@ Add to your Claude Desktop config (`~/.config/claude-desktop/config.json` on Lin
     "api-wrapper": {
       "command": "node",
       "args": ["dist/index.js"],
-      "cwd": "/path/to/mcp-security/cookbook/api-wrapper-server"
+      "cwd": "/path/to/mcp-secure-server/cookbook/api-wrapper-server"
     }
   }
 }

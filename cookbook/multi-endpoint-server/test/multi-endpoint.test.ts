@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { request, createServer } from 'node:http';
 import type { Server, IncomingMessage, ServerResponse } from 'node:http';
-import { createSecureHttpHandler, SecureHttpHandler } from 'mcp-security';
+import { createSecureHttpHandler, SecureHttpHandler } from 'mcp-secure-server';
 import { createAdminServer, registerAdminTools } from '../src/servers/admin-server.js';
 import { createPublicServer, registerPublicTools } from '../src/servers/public-server.js';
 

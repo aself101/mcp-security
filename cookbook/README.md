@@ -1,6 +1,6 @@
 # MCP Cookbook
 
-Example MCP servers built with the [mcp-security](https://github.com/anthropics/mcp-security) framework. These servers demonstrate how to build secure MCP tools for real-world APIs.
+Example MCP servers built with the [mcp-secure-server](https://github.com/anthropics/mcp-secure-server) framework. These servers demonstrate how to build secure MCP tools for real-world APIs.
 
 ## Servers
 
@@ -50,47 +50,47 @@ Add to your Claude Desktop config (`~/.config/claude/claude_desktop_config.json`
     "advanced-validation": {
       "command": "node",
       "args": ["cookbook/advanced-validation-server/dist/index.js"],
-      "cwd": "/path/to/mcp-security"
+      "cwd": "/path/to/mcp-secure-server"
     },
     "api-wrapper": {
       "command": "node",
       "args": ["cookbook/api-wrapper-server/dist/index.js"],
-      "cwd": "/path/to/mcp-security"
+      "cwd": "/path/to/mcp-secure-server"
     },
     "cli-wrapper": {
       "command": "node",
       "args": ["cookbook/cli-wrapper-server/dist/index.js"],
-      "cwd": "/path/to/mcp-security"
+      "cwd": "/path/to/mcp-secure-server"
     },
     "database": {
       "command": "node",
       "args": ["cookbook/database-server/dist/index.js"],
-      "cwd": "/path/to/mcp-security"
+      "cwd": "/path/to/mcp-secure-server"
     },
     "filesystem": {
       "command": "node",
       "args": ["cookbook/filesystem-server/dist/index.js"],
-      "cwd": "/path/to/mcp-security"
+      "cwd": "/path/to/mcp-secure-server"
     },
     "image-gen": {
       "command": "node",
       "args": ["cookbook/image-gen-server/dist/index.js"],
-      "cwd": "/path/to/mcp-security"
+      "cwd": "/path/to/mcp-secure-server"
     },
     "kenpom": {
       "command": "node",
       "args": ["cookbook/kenpom-server/dist/index.js"],
-      "cwd": "/path/to/mcp-security"
+      "cwd": "/path/to/mcp-secure-server"
     },
     "monitoring": {
       "command": "node",
       "args": ["cookbook/monitoring-server/dist/index.js"],
-      "cwd": "/path/to/mcp-security"
+      "cwd": "/path/to/mcp-secure-server"
     },
     "nba": {
       "command": "node",
       "args": ["cookbook/nba-server/dist/index.js"],
-      "cwd": "/path/to/mcp-security"
+      "cwd": "/path/to/mcp-secure-server"
     }
   }
 }
@@ -352,7 +352,7 @@ NBA stats, live scores, and player data from public APIs.
 
 ## Security
 
-All servers use the mcp-security framework which provides:
+All servers use the mcp-secure-server framework which provides:
 
 - **5-layer validation pipeline**: Structure, Content, Behavior, Semantics, Contextual
 - **Rate limiting**: Configurable per-minute and per-hour limits

@@ -112,9 +112,14 @@ export const lolbins = {
 export const csv = {
   formula: [
     // CSV injection requires formula at START of cell value, often with cmd/DDE payloads
-    { pattern: /^[\t ]*[=+@](?:cmd|powershell|calc|HYPERLINK|IMPORTXML|IMPORTDATA|WEBSERVICE)/i, name: 'CSV Formula Command', severity: 'HIGH' },
-    { pattern: /^[\t ]*-\d+\+\d+\+cmd/i, name: 'CSV Minus Formula', severity: 'HIGH' },
-    { pattern: /^[\t ]*["']?[=+@].*\|.*["']?!A/i, name: 'CSV DDE Payload', severity: 'HIGH' }
+    // Include quotes in prefix to catch JSON-serialized content where = or + follows a quote
+    { pattern: /(?:^[\t ]*|[\s,;|"'])[=+](?:cmd|powershell|calc|HYPERLINK|IMPORTXML|IMPORTDATA|WEBSERVICE)/i, name: 'CSV Formula Command', severity: 'HIGH' },
+    // Include quotes in prefix to catch JSON-serialized content where - follows a quote
+    { pattern: /(?:^[\t ]*|[\s,;|"'])-\d+\+\d+\+cmd/i, name: 'CSV Minus Formula', severity: 'HIGH' },
+    { pattern: /^[\t ]*["']?[=+@].*\|.*["']?!A/i, name: 'CSV DDE Payload', severity: 'HIGH' },
+    // @ prefix is legacy Lotus 1-2-3 syntax that Excel still interprets as formulas
+    // Include quotes in prefix to catch JSON-serialized content where @ follows a quote
+    { pattern: /(?:^|[\s,;|"'])@(?:SUM|AVERAGE|COUNT|MAX|MIN|IF|VLOOKUP|HLOOKUP|INDEX|MATCH|INDIRECT|HYPERLINK|IMPORTXML|IMPORTDATA|IMPORTRANGE|WEBSERVICE)\s*\(/i, name: 'CSV At-Formula', severity: 'HIGH' }
   ],
   payloads: [
     { pattern: /=["']?cmd\|/i, name: 'CSV CMD Pipe', severity: 'HIGH' },

@@ -5,7 +5,7 @@
  * Exposes calculator and echo tools over a single HTTP endpoint.
  */
 
-import { SecureMcpServer } from 'mcp-security';
+import { SecureMcpServer } from 'mcp-secure-server';
 import { calculatorSchema, calculatorHandler } from './tools/calculator.js';
 import { echoSchema, echoHandler } from './tools/echo.js';
 

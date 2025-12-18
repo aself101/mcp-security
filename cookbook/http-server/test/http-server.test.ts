@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { request } from 'node:http';
 import type { Server, IncomingMessage } from 'node:http';
-import { SecureMcpServer } from 'mcp-security';
+import { SecureMcpServer } from 'mcp-secure-server';
 import { calculatorSchema, calculatorHandler } from '../src/tools/calculator.js';
 import { echoSchema, echoHandler } from '../src/tools/echo.js';
 

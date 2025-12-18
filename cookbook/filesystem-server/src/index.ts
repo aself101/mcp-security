@@ -16,7 +16,7 @@
 
 import 'dotenv/config';
 import * as path from 'path';
-import { SecureMcpServer } from 'mcp-security';
+import { SecureMcpServer } from 'mcp-secure-server';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
 
 import {

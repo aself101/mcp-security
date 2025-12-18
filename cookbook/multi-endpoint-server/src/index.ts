@@ -9,7 +9,7 @@
  */
 
 import { createServer, IncomingMessage, ServerResponse } from 'node:http';
-import { createSecureHttpHandler, SecureHttpHandler } from 'mcp-security';
+import { createSecureHttpHandler, SecureHttpHandler } from 'mcp-secure-server';
 import { createAdminServer, registerAdminTools } from './servers/admin-server.js';
 import { createPublicServer, registerPublicTools } from './servers/public-server.js';
 

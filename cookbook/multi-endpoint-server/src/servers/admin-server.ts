@@ -4,7 +4,7 @@
  * Higher privileges, more permissive policies, detailed logging.
  */
 
-import { SecureMcpServer } from 'mcp-security';
+import { SecureMcpServer } from 'mcp-secure-server';
 import { listUsersSchema, listUsersHandler } from '../tools/admin/user-management.js';
 import { systemStatsSchema, systemStatsHandler } from '../tools/admin/system-stats.js';
 

@@ -4,7 +4,7 @@
  * Restricted privileges, stricter rate limits, minimal logging.
  */
 
-import { SecureMcpServer } from 'mcp-security';
+import { SecureMcpServer } from 'mcp-secure-server';
 import { healthSchema, healthHandler } from '../tools/public/health.js';
 import { statusSchema, statusHandler } from '../tools/public/status.js';
 
