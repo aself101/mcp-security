@@ -79,3 +79,12 @@ export type {
   ErrorSanitizerConfig,
   SecurityLoggerOptions,
 } from './policies.js';
+
+// Server types
+export type {
+  McpMessage,
+  RequestHistoryEntry,
+  ContextualConfig,
+  SecureMcpServerOptions,
+  ResolvedOptions,
+} from './server.js';

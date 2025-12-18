@@ -11,113 +11,16 @@ import ContentValidationLayer from "./layers/layer2-content.js";
 import BehaviorValidationLayer from "./layers/layer3-behavior.js";
 import SemanticsValidationLayer from "./layers/layer4-semantics.js";
 import ContextualValidationLayer from "./layers/layer5-contextual.js";
-import { InMemoryQuotaProvider, QuotaProvider } from "./layers/layer-utils/semantics/semantic-quotas.js";
+import { InMemoryQuotaProvider } from "./layers/layer-utils/semantics/semantic-quotas.js";
 import { defaultToolRegistry, defaultResourcePolicy } from "./utils/tool-registry.js";
 import { ErrorSanitizer } from "./utils/error-sanitizer.js";
 import { SecureTransport, McpTransport, createSecureHttpServer, HttpServerOptions } from "./transport/index.js";
 import type { Server } from 'node:http';
 import { SecurityLogger } from "./utils/security-logger.js";
 import { normalizeRequest } from "./utils/request-normalizer.js";
-import type { ValidationResult, PolicyContext } from '../types/index.js';
-import type { ToolSpec, ResourcePolicy, MethodSpec, ChainingRule } from "./layers/layer-utils/semantics/semantic-policies.js";
-import type { ContextualLayerOptions } from "./layers/layer5-contextual.js";
-import type { QuotaLimits } from "./layers/layer-utils/semantics/semantic-quotas.js";
-
-/** Server info passed to MCP SDK */
-export interface ServerInfo {
-  name: string;
-  version: string;
-}
-
-/** MCP message structure */
-interface McpMessage {
-  jsonrpc?: string;
-  method?: string;
-  id?: string | number | null;
-  params?: Record<string, unknown>;
-  result?: unknown;
-  error?: unknown;
-  [key: string]: unknown;
-}
-
-/** Request history entry */
-interface RequestHistoryEntry {
-  timestamp: number;
-  method: string | undefined;
-  hasParams: boolean;
-  messageSize: number;
-}
-
-/** Security stats structure */
-interface SecurityStats {
-  server: {
-    uptime: number;
-    totalLayers: number;
-    enabledLayers: number;
-    loggingEnabled: boolean;
-  };
-  behaviorLayer: unknown;
-  logger?: unknown;
-}
-
-/** Contextual layer configuration options */
-interface ContextualConfig extends Partial<ContextualLayerOptions> {
-  enabled?: boolean;
-}
-
-/** SecureMcpServer configuration options */
-export interface SecureMcpServerOptions {
-  /** McpServer options passed to underlying SDK */
-  server?: Record<string, unknown>;
-  /** Maximum message size in bytes */
-  maxMessageSize?: number;
-  /** Rate limit per minute */
-  maxRequestsPerMinute?: number;
-  /** Rate limit per hour */
-  maxRequestsPerHour?: number;
-  /** Max requests in 10-second window */
-  burstThreshold?: number;
-  /** Enable security logging (opt-in) */
-  enableLogging?: boolean;
-  /** Enable verbose decision logs */
-  verboseLogging?: boolean;
-  /** Enable timing stats */
-  logPerformanceMetrics?: boolean;
-  /** Log level when logging enabled */
-  logLevel?: string;
-  /** Custom tool registry for Layer 4 */
-  toolRegistry?: ToolSpec[];
-  /** Custom resource policy for Layer 4 */
-  resourcePolicy?: ResourcePolicy;
-  /** Method spec for Layer 4 */
-  methodSpec?: MethodSpec;
-  /** Chaining rules for Layer 4 */
-  chainingRules?: ChainingRule[];
-  /** Enforce method chaining (disabled by default) */
-  enforceChaining?: boolean;
-  /** Quotas for Layer 4 */
-  quotas?: Record<string, QuotaLimits>;
-  /** Quota provider for Layer 4 */
-  quotaProvider?: QuotaProvider;
-  /** Clock skew tolerance in ms */
-  clockSkewMs?: number;
-  /** Max sessions for Layer 4 */
-  maxSessions?: number;
-  /** Session TTL in ms */
-  sessionTtlMs?: number;
-  /** Default policy for side effects */
-  defaultPolicy?: PolicyContext;
-  /** Layer 5 contextual validation config */
-  contextual?: ContextualConfig;
-}
-
-/** Internal resolved options */
-interface ResolvedOptions extends Required<Pick<SecureMcpServerOptions,
-  'maxMessageSize' | 'maxRequestsPerMinute' | 'maxRequestsPerHour' | 'burstThreshold' |
-  'enableLogging' | 'verboseLogging' | 'logPerformanceMetrics' | 'logLevel' | 'defaultPolicy'
->> {
-  [key: string]: unknown;
-}
+import { createResponseWrapper } from "./utils/response-validator.js";
+import type { ValidationResult, ServerInfo, SecurityStats } from '../types/index.js';
+import type { McpMessage, RequestHistoryEntry, SecureMcpServerOptions, ResolvedOptions } from '../types/server.js';
 
 /**
  * Unified secure MCP server with built-in transport-level security validation.
@@ -178,9 +81,7 @@ class SecureMcpServer {
     this._requestIdByJsonrpcId = new Map();
   }
 
-  /**
-   * Create the 5-layer validation pipeline
-   */
+  /** Create the 5-layer validation pipeline */
   private _createValidationPipeline(options: SecureMcpServerOptions): ValidationPipeline {
     const layers: ValidationLayerInterface[] = [
       new StructureValidationLayer({
@@ -212,47 +113,24 @@ class SecureMcpServer {
     // Layer 5: Contextual Validation (enabled by default)
     const contextualConfig = options.contextual ?? {};
     if (contextualConfig.enabled !== false) {
-      layers.push(new ContextualValidationLayer(contextualConfig));
+      layers.push(new ContextualValidationLayer(contextualConfig as ConstructorParameters<typeof ContextualValidationLayer>[0]));
     }
 
     return new ValidationPipeline(layers);
   }
 
-  // ==================== McpServer Delegation ====================
-
   async connect(transport: McpTransport): Promise<void> {
     this._wrappedTransport = this._wrapTransport(transport);
-    // SAFETY: SecureTransport implements the same interface as SDK transport but with
-    // different type signature. The assertion bridges our wrapper to the SDK's expected type.
     return this._mcpServer.connect(this._wrappedTransport as unknown as Parameters<McpServer['connect']>[0]);
   }
 
-  /**
-   * Create standalone HTTP server with security validation.
-   * Uses node:http directly for zero external dependencies.
-   *
-   * @param options - Server configuration options
-   * @returns Node.js HTTP server (call .listen() to start)
-   *
-   * @example
-   * ```typescript
-   * const httpServer = server.createHttpServer({ endpoint: '/mcp' });
-   * httpServer.listen(3000, () => {
-   *   console.log('MCP server listening on http://localhost:3000/mcp');
-   * });
-   * ```
-   */
+  /** Create standalone HTTP server with security validation */
   createHttpServer(options: HttpServerOptions = {}): Server {
     return createSecureHttpServer(this as unknown as Parameters<typeof createSecureHttpServer>[0], options);
   }
 
-  async close(): Promise<void> {
-    return this._mcpServer.close();
-  }
-
-  isConnected(): boolean {
-    return this._mcpServer.isConnected();
-  }
+  async close(): Promise<void> { return this._mcpServer.close(); }
+  isConnected(): boolean { return this._mcpServer.isConnected(); }
 
   tool(name: string, ...rest: unknown[]): unknown {
     // Find the handler (last function argument) and wrap it for response validation
@@ -265,50 +143,11 @@ class SecureMcpServer {
 
     const originalHandler = rest[handlerIndex] as (args: unknown) => Promise<unknown>;
     const layer5 = this._validationPipeline.layers[4] as ContextualValidationLayer | undefined;
-
-    // Wrap the handler to run response validation
-    const wrappedHandler = async (args: unknown): Promise<unknown> => {
-      const response = await originalHandler(args);
-
-      // Run Layer 5 response validators if available
-      if (layer5 && typeof layer5.validateResponse === 'function') {
-        try {
-          const validationResult = await layer5.validateResponse(response, { tool: name, arguments: args }, {});
-
-          if (!validationResult.passed) {
-            // Log the blocked response
-            if (this._securityLogger) {
-              this._securityLogger.logInfo(
-                `[RESPONSE_BLOCKED] Tool: ${name}, Reason: ${validationResult.reason ?? 'Response validation failed'}, ` +
-                `Severity: ${validationResult.severity ?? 'HIGH'}, Type: ${validationResult.violationType ?? 'RESPONSE_BLOCKED'}`
-              );
-            }
-
-            // Return error response instead of the blocked content
-            return {
-              content: [{
-                type: 'text',
-                text: `Response blocked: ${validationResult.reason ?? 'Response validation failed'}`
-              }],
-              isError: true
-            };
-          }
-        } catch (error) {
-          // Log but don't block on validator errors
-          if (this._securityLogger) {
-            this._securityLogger.logInfo(
-              `[VALIDATOR_ERROR] Response validator error for tool ${name}: ${error instanceof Error ? error.message : 'Unknown error'}`
-            );
-          }
-        }
-      }
-
-      return response;
-    };
+    const wrapWithValidation = createResponseWrapper(layer5, this._securityLogger, name);
 
     // Replace the handler with the wrapped version
     const newRest = [...rest];
-    newRest[handlerIndex] = wrappedHandler;
+    newRest[handlerIndex] = wrapWithValidation(originalHandler);
 
     return (this._mcpServer.tool as (...args: unknown[]) => unknown)(name, ...newRest);
   }
@@ -321,44 +160,9 @@ class SecureMcpServer {
 
     const originalCallback = callback as (args: unknown) => Promise<unknown>;
     const layer5 = this._validationPipeline.layers[4] as ContextualValidationLayer | undefined;
+    const wrapWithValidation = createResponseWrapper(layer5, this._securityLogger, name);
 
-    const wrappedCallback = async (args: unknown): Promise<unknown> => {
-      const response = await originalCallback(args);
-
-      // Run Layer 5 response validators if available
-      if (layer5 && typeof layer5.validateResponse === 'function') {
-        try {
-          const validationResult = await layer5.validateResponse(response, { tool: name, arguments: args }, {});
-
-          if (!validationResult.passed) {
-            if (this._securityLogger) {
-              this._securityLogger.logInfo(
-                `[RESPONSE_BLOCKED] Tool: ${name}, Reason: ${validationResult.reason ?? 'Response validation failed'}, ` +
-                `Severity: ${validationResult.severity ?? 'HIGH'}, Type: ${validationResult.violationType ?? 'RESPONSE_BLOCKED'}`
-              );
-            }
-
-            return {
-              content: [{
-                type: 'text',
-                text: `Response blocked: ${validationResult.reason ?? 'Response validation failed'}`
-              }],
-              isError: true
-            };
-          }
-        } catch (error) {
-          if (this._securityLogger) {
-            this._securityLogger.logInfo(
-              `[VALIDATOR_ERROR] Response validator error for tool ${name}: ${error instanceof Error ? error.message : 'Unknown error'}`
-            );
-          }
-        }
-      }
-
-      return response;
-    };
-
-    return (this._mcpServer.registerTool as (...args: unknown[]) => unknown)(name, config, wrappedCallback);
+    return (this._mcpServer.registerTool as (...args: unknown[]) => unknown)(name, config, wrapWithValidation(originalCallback));
   }
 
   resource(name: string, uriOrTemplate: unknown, ...rest: unknown[]): unknown {
@@ -381,35 +185,15 @@ class SecureMcpServer {
     return (this._mcpServer.sendLoggingMessage as (...args: unknown[]) => Promise<unknown>)(params, sessionId);
   }
 
-  sendResourceListChanged(): void {
-    return this._mcpServer.sendResourceListChanged();
-  }
+  sendResourceListChanged(): void { this._mcpServer.sendResourceListChanged(); }
+  sendToolListChanged(): void { this._mcpServer.sendToolListChanged(); }
+  sendPromptListChanged(): void { this._mcpServer.sendPromptListChanged(); }
 
-  sendToolListChanged(): void {
-    return this._mcpServer.sendToolListChanged();
-  }
+  get server(): unknown { return this._mcpServer.server; }
+  get mcpServer(): McpServer { return this._mcpServer; }
+  get validationPipeline(): ValidationPipeline { return this._validationPipeline; }
 
-  sendPromptListChanged(): void {
-    return this._mcpServer.sendPromptListChanged();
-  }
-
-  get server(): unknown {
-    return this._mcpServer.server;
-  }
-
-  get mcpServer(): McpServer {
-    return this._mcpServer;
-  }
-
-  get validationPipeline(): ValidationPipeline {
-    return this._validationPipeline;
-  }
-
-  // ==================== Transport Wrapping ====================
-
-  /**
-   * Wraps a transport with security validation at the message level.
-   */
+  /** Wraps a transport with security validation at the message level */
   private _wrapTransport(transport: McpTransport): SecureTransport {
     const validator = async (message: McpMessage, context: { timestamp: number; transportLevel: boolean }): Promise<ValidationResult> => {
       const startTime = this._options.logPerformanceMetrics ? performance.now() : 0;
@@ -483,11 +267,7 @@ class SecureMcpServer {
     }
   }
 
-  // ==================== Stats & Reporting ====================
-
-  /**
-   * Get security stats from all layers
-   */
+  /** Get security stats from all layers */
   getSecurityStats(): SecurityStats {
     const behaviorLayer = this._validationPipeline.layers.find(
       layer => layer.constructor.name === 'BehaviorValidationLayer'
@@ -500,14 +280,12 @@ class SecureMcpServer {
         enabledLayers: this._validationPipeline.layers.filter(l => l.isEnabled()).length,
         loggingEnabled: this._options.enableLogging
       },
-      behaviorLayer: behaviorLayer ? behaviorLayer.getStats() : null,
+      behaviorLayer: behaviorLayer ? behaviorLayer.getStats() : undefined,
       ...(this._securityLogger ? { logger: this._securityLogger.getStats() } : {})
     };
   }
 
-  /**
-   * Get verbose security report (requires logging enabled)
-   */
+  /** Get verbose security report (requires logging enabled) */
   getVerboseSecurityReport(): unknown {
     if (!this._securityLogger) {
       return { error: 'Logging not enabled. Set enableLogging: true in options.' };
@@ -515,9 +293,7 @@ class SecureMcpServer {
     return this._securityLogger.getStats();
   }
 
-  /**
-   * Generate security report (requires logging enabled)
-   */
+  /** Generate security report (requires logging enabled) */
   async generateSecurityReport(): Promise<unknown> {
     if (!this._securityLogger) {
       return { error: 'Logging not enabled. Set enableLogging: true in options.' };
@@ -525,9 +301,7 @@ class SecureMcpServer {
     return await this._securityLogger.generateReport();
   }
 
-  /**
-   * Graceful shutdown with optional final report
-   */
+  /** Graceful shutdown with optional final report */
   async shutdown(): Promise<unknown> {
     let finalReport: unknown = null;
 
@@ -550,4 +324,4 @@ class SecureMcpServer {
 }
 
 export { SecureMcpServer };
-export type { HttpServerOptions };
+export type { HttpServerOptions, SecureMcpServerOptions, ServerInfo };
