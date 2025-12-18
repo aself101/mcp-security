@@ -116,7 +116,8 @@ export const csv = {
     { pattern: /(?:^[\t ]*|[\s,;|"'])[=+](?:cmd|powershell|calc|HYPERLINK|IMPORTXML|IMPORTDATA|WEBSERVICE)/i, name: 'CSV Formula Command', severity: 'HIGH' },
     // Include quotes in prefix to catch JSON-serialized content where - follows a quote
     { pattern: /(?:^[\t ]*|[\s,;|"'])-\d+\+\d+\+cmd/i, name: 'CSV Minus Formula', severity: 'HIGH' },
-    { pattern: /^[\t ]*["']?[=+@].*\|.*["']?!A/i, name: 'CSV DDE Payload', severity: 'HIGH' },
+    // Include quotes in prefix to catch JSON-serialized DDE payloads
+    { pattern: /(?:^[\t ]*|[\s,;|"'])["']?[=+@].*\|.*["']?!A/i, name: 'CSV DDE Payload', severity: 'HIGH' },
     // @ prefix is legacy Lotus 1-2-3 syntax that Excel still interprets as formulas
     // Include quotes in prefix to catch JSON-serialized content where @ follows a quote
     { pattern: /(?:^|[\s,;|"'])@(?:SUM|AVERAGE|COUNT|MAX|MIN|IF|VLOOKUP|HLOOKUP|INDEX|MATCH|INDIRECT|HYPERLINK|IMPORTXML|IMPORTDATA|IMPORTRANGE|WEBSERVICE)\s*\(/i, name: 'CSV At-Formula', severity: 'HIGH' }
