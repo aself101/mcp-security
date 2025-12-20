@@ -1,3 +1,9 @@
+## [0.9.1](https://github.com/aself101/mcp-secure-server/compare/v0.9.0...v0.9.1) (2025-12-20)
+
+### Bug Fixes
+
+* **ci:** add public access flag for npm publish ([6f7ea8a](https://github.com/aself101/mcp-secure-server/commit/6f7ea8a2b08bb660b7978fa3850f0455ae206e61))
+
 ## [0.9.0](https://github.com/aself101/mcp-secure-server/compare/v0.8.0...v0.9.0) (2025-12-20)
 
 ### Features
