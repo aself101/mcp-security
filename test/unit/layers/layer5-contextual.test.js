@@ -571,6 +571,41 @@ describe('ContextualConfigBuilder', () => {
     expect(config.rateLimiting.enabled).toBe(true);
     expect(config.responseValidation.enabled).toBe(true);
   });
+
+  it('builds domain restrictions config with blocked domains', () => {
+    const config = new ContextualConfigBuilder()
+      .enableDomainRestrictions({
+        blockedDomains: ['evil.com', 'malware.org'],
+        allowedDomains: []
+      })
+      .build();
+
+    expect(config.domainRestrictions.enabled).toBe(true);
+    expect(config.domainRestrictions.blockedDomains).toEqual(['evil.com', 'malware.org']);
+    expect(config.domainRestrictions.allowedDomains).toEqual([]);
+  });
+
+  it('builds domain restrictions config with allowed domains', () => {
+    const config = new ContextualConfigBuilder()
+      .enableDomainRestrictions({
+        allowedDomains: ['trusted.com', 'api.example.org']
+      })
+      .build();
+
+    expect(config.domainRestrictions.enabled).toBe(true);
+    expect(config.domainRestrictions.allowedDomains).toEqual(['trusted.com', 'api.example.org']);
+    expect(config.domainRestrictions.blockedDomains).toEqual([]);
+  });
+
+  it('builds domain restrictions config with defaults when no options provided', () => {
+    const config = new ContextualConfigBuilder()
+      .enableDomainRestrictions()
+      .build();
+
+    expect(config.domainRestrictions.enabled).toBe(true);
+    expect(config.domainRestrictions.blockedDomains).toEqual([]);
+    expect(config.domainRestrictions.allowedDomains).toEqual([]);
+  });
 });
 
 describe('createContextualLayer', () => {

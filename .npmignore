@@ -5,14 +5,24 @@ test-server/
 coverage/
 docs/
 
+# Source (dist is published)
+src/
+
 # Config
 .claude/
 .git/
+.github/
 .gitignore
 .npmignore
+.releaserc.json
+.mcp.json
+.mcp.example.json
 vitest.config.js
 eslint.config.js
+tsconfig.json
+tsconfig.test.json
 CLAUDE.md
+AGENTS.md
 
 # IDE
 .idea/
@@ -21,8 +31,14 @@ CLAUDE.md
 # Build artifacts
 logs/
 *.log
+*.tgz
 
 # Examples
 claude_desktop_config_example.json
 cookbook/
 generated-images/
+
+# Documentation (README is included in files)
+SECURITY.md
+CHANGELOG.md
+mcp-secure-server-features-list.md

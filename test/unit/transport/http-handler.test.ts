@@ -185,4 +185,157 @@ describe('createSecureHttpHandler', () => {
       body
     );
   });
+
+  describe('GET and DELETE methods', () => {
+    it('handles GET requests without validation (SSE)', async () => {
+      const logger = { logInfo: vi.fn(), logSecurityDecision: vi.fn() };
+      const server = createMockServer({ logger });
+      const handler = createSecureHttpHandler(server as never);
+      const req = createRequest({ method: 'GET', headers: {} });
+      const res = new MockResponse();
+
+      // Don't write body for GET
+      setImmediate(() => req.end());
+
+      await handler(req as never, res as never);
+
+      expect(server.validationPipeline.validate).not.toHaveBeenCalled();
+      expect(currentMockTransport?.handleRequest).toHaveBeenCalledWith(req, res);
+      expect(logger.logInfo).toHaveBeenCalledWith('HTTP GET request completed');
+    });
+
+    it('handles DELETE requests without validation (session cleanup)', async () => {
+      const logger = { logInfo: vi.fn(), logSecurityDecision: vi.fn() };
+      const server = createMockServer({ logger });
+      const handler = createSecureHttpHandler(server as never);
+      const req = createRequest({ method: 'DELETE', headers: {} });
+      const res = new MockResponse();
+
+      setImmediate(() => req.end());
+
+      await handler(req as never, res as never);
+
+      expect(server.validationPipeline.validate).not.toHaveBeenCalled();
+      expect(currentMockTransport?.handleRequest).toHaveBeenCalledWith(req, res);
+      expect(logger.logInfo).toHaveBeenCalledWith('HTTP DELETE request completed');
+    });
+
+    it('returns 500 when GET request transport fails', async () => {
+      currentMockTransport = {
+        handleRequest: vi.fn().mockRejectedValue(new Error('Transport error'))
+      };
+      const server = createMockServer();
+      const handler = createSecureHttpHandler(server as never);
+      const req = createRequest({ method: 'GET', headers: {} });
+      const res = new MockResponse();
+
+      setImmediate(() => req.end());
+
+      await handler(req as never, res as never);
+
+      expect(res.statusCode).toBe(500);
+      expect(JSON.parse(res.body).error).toBe('Internal server error');
+    });
+
+    it('returns 500 when DELETE request transport fails', async () => {
+      currentMockTransport = {
+        handleRequest: vi.fn().mockRejectedValue(new Error('Transport error'))
+      };
+      const server = createMockServer();
+      const handler = createSecureHttpHandler(server as never);
+      const req = createRequest({ method: 'DELETE', headers: {} });
+      const res = new MockResponse();
+
+      setImmediate(() => req.end());
+
+      await handler(req as never, res as never);
+
+      expect(res.statusCode).toBe(500);
+      expect(JSON.parse(res.body).error).toBe('Internal server error');
+    });
+  });
+
+  describe('HTTP method validation', () => {
+    it('rejects unsupported HTTP methods with 405', async () => {
+      const server = createMockServer();
+      const handler = createSecureHttpHandler(server as never);
+      const req = createRequest({ method: 'PUT', headers: {} });
+      const res = new MockResponse();
+
+      setImmediate(() => req.end());
+
+      await handler(req as never, res as never);
+
+      expect(res.statusCode).toBe(405);
+      expect(res.headers['Allow']).toBe('GET, POST, DELETE');
+      expect(JSON.parse(res.body).error).toBe('Method not allowed');
+    });
+
+    it('rejects PATCH method with 405', async () => {
+      const server = createMockServer();
+      const handler = createSecureHttpHandler(server as never);
+      const req = createRequest({ method: 'PATCH', headers: {} });
+      const res = new MockResponse();
+
+      setImmediate(() => req.end());
+
+      await handler(req as never, res as never);
+
+      expect(res.statusCode).toBe(405);
+    });
+  });
+
+  describe('request body handling', () => {
+    it('returns 408 for request timeout', async () => {
+      const server = createMockServer();
+      const handler = createSecureHttpHandler(server as never, { requestTimeout: 10 });
+      const req = createRequest({
+        method: 'POST',
+        headers: { 'content-type': 'application/json' }
+      });
+      const res = new MockResponse();
+
+      // Don't end the request - let it timeout
+
+      await handler(req as never, res as never);
+
+      expect(res.statusCode).toBe(408);
+      expect(JSON.parse(res.body).error).toMatch(/timeout/i);
+    });
+
+    it('returns 400 for body exceeding size limit', async () => {
+      const server = createMockServer();
+      const handler = createSecureHttpHandler(server as never, { maxBodySize: 10 });
+      const req = createRequest({
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ data: 'this is a very long body that exceeds the limit' })
+      });
+      const res = new MockResponse();
+
+      await handler(req as never, res as never);
+
+      expect(res.statusCode).toBe(400);
+      expect(JSON.parse(res.body).error).toMatch(/exceeds/i);
+    });
+
+    it('returns 500 when POST transport fails after validation', async () => {
+      currentMockTransport = {
+        handleRequest: vi.fn().mockRejectedValue(new Error('Transport error'))
+      };
+      const server = createMockServer();
+      const handler = createSecureHttpHandler(server as never);
+      const req = createRequest({
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ jsonrpc: '2.0', id: 1, method: 'test' })
+      });
+      const res = new MockResponse();
+
+      await handler(req as never, res as never);
+
+      expect(res.statusCode).toBe(500);
+      expect(JSON.parse(res.body).error).toBe('Internal server error');
+    });
+  });
 });

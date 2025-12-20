@@ -9,12 +9,17 @@ export default defineConfig({
     coverage: {
       provider: 'v8',
       reporter: ['text', 'json', 'html'],
+      include: ['src/**/*.ts'],
       exclude: [
         'test/**',
         'test-servers/**',
         'ssl-certs/**',
         'logs/**',
-        'test-data/**'
+        'test-data/**',
+        'cookbook/**',
+        'dist/**',
+        '**/*.d.ts',
+        '**/types/**'
       ]
     },
     testTimeout: 10000,

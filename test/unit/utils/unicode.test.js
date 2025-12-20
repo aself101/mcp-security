@@ -283,3 +283,74 @@ describe('normalizeCJKCompatibility', () => {
     expect(result).toBe(unmappedCodePoint);
   });
 });
+
+describe('decodeUnicodeEscapes edge cases', () => {
+  it('handles double-backslash hex escapes', () => {
+    const input = '\\\\x41\\\\x42'; // \\x41\\x42
+    const result = decodeUnicodeEscapes(input);
+
+    expect(result).toBe('AB');
+  });
+
+  it('handles double-backslash unicode escapes', () => {
+    const input = '\\\\u0041\\\\u0042'; // \\u0041\\u0042
+    const result = decodeUnicodeEscapes(input);
+
+    expect(result).toBe('AB');
+  });
+
+  it('handles mixed single and double backslash escapes', () => {
+    const input = '\\x41\\\\x42'; // \x41\\x42
+    const result = decodeUnicodeEscapes(input);
+
+    expect(result).toBe('AB');
+  });
+
+  it('preserves invalid hex escape sequences', () => {
+    const input = '\\xGG'; // Invalid hex
+    const result = decodeUnicodeEscapes(input);
+
+    expect(result).toBe('\\xGG');
+  });
+
+  it('handles single hex bytes correctly', () => {
+    // Each \xNN is decoded as its individual character
+    const input = '\\x41\\x42\\x43';
+    const result = decodeUnicodeEscapes(input);
+
+    expect(result).toBe('ABC');
+  });
+
+  it('handles surrogate pairs for extended unicode', () => {
+    // Extended braces syntax for emoji (if supported)
+    const input = '\\x{1F600}';
+    const result = decodeUnicodeEscapes(input);
+
+    // Should decode to the emoji
+    expect(result).toBe('😀');
+  });
+});
+
+describe('decodeEntities edge cases', () => {
+  it('handles CJK compatibility form entities', () => {
+    // U+FE35 = CJK vertical left parenthesis, maps to (
+    const input = '&#xFE35;';
+    const result = decodeEntities(input);
+
+    expect(result).toBe('(');
+  });
+
+  it('handles leading zeros in hex entities', () => {
+    const input = '&#x0000003C;'; // Many leading zeros before <
+    const result = decodeEntities(input);
+
+    expect(result).toBe('<');
+  });
+
+  it('handles leading zeros in decimal entities', () => {
+    const input = '&#0000060;'; // Many leading zeros before < (60)
+    const result = decodeEntities(input);
+
+    expect(result).toBe('<');
+  });
+});

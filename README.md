@@ -1048,53 +1048,74 @@ npm run lint
 
 ```
 src/
-├── index.ts                              # Main entry point
+├── index.ts                              # Main entry point & public exports
 ├── types/                                # TypeScript type definitions
-│   ├── index.ts
+│   ├── index.ts                          # Type exports & guards
 │   ├── layers.ts                         # Layer type definitions
-│   ├── messages.ts                       # Message type definitions
+│   ├── messages.ts                       # MCP message types
 │   ├── policies.ts                       # Policy type definitions
-│   └── validation.ts                     # Validation type definitions
+│   ├── server.ts                         # Server configuration types
+│   └── validation.ts                     # Validation result types
 └── security/
+    ├── index.ts                          # Security module exports
     ├── mcp-secure-server.ts              # SecureMcpServer class
     ├── constants.ts                      # Configuration constants
     ├── transport/
     │   ├── index.ts                      # Transport exports
-    │   ├── secure-transport.ts           # SecureTransport class (stdio)
+    │   ├── secure-transport.ts           # SecureTransport (stdio)
     │   └── http-server.ts                # HTTP transport server
     ├── layers/
+    │   ├── validation-layer-base.ts      # Base class for all layers
     │   ├── layer1-structure.ts           # JSON-RPC validation
     │   ├── layer2-content.ts             # Content/injection detection
     │   ├── layer2-validators/            # Modular content validators
-    │   ├── layer3-behavior.ts            # Rate limiting
-    │   ├── layer4-semantics.ts           # Tool contracts
+    │   │   ├── index.ts                  # Validator exports
+    │   │   ├── pattern-detection.ts      # Attack pattern matching
+    │   │   ├── base64-css.ts             # Base64/CSS attack detection
+    │   │   └── data-semantics.ts         # Data format validation
+    │   ├── layer3-behavior.ts            # Rate limiting & burst detection
+    │   ├── layer4-semantics.ts           # Tool contracts & policies
     │   ├── layer5-contextual.ts          # Custom validators
-    │   ├── contextual-config-builder.ts  # Layer 5 configuration
-    │   ├── validation-layer-base.ts      # Base class
+    │   ├── contextual-config-builder.ts  # Layer 5 fluent configuration
     │   └── layer-utils/
     │       ├── content/
     │       │   ├── canonicalize.ts       # Text normalization
-    │       │   ├── dangerous-patterns.ts # Attack pattern definitions
-    │       │   ├── patterns/             # Pattern modules
-    │       │   └── utils/                # Helper utilities
-    │       └── semantics/                # Semantic utilities
+    │       │   ├── unicode.ts            # Unicode attack normalization
+    │       │   ├── dangerous-patterns.ts # Pattern configuration
+    │       │   ├── helper-utils.ts       # Content helper functions
+    │       │   ├── patterns/             # Attack pattern definitions
+    │       │   │   ├── index.ts          # Pattern exports & utilities
+    │       │   │   ├── injection.ts      # SQL/XSS/NoSQL patterns
+    │       │   │   ├── path-traversal.ts # Path traversal patterns
+    │       │   │   ├── network.ts        # SSRF/network patterns
+    │       │   │   └── overflow-validation.ts # Buffer/encoding patterns
+    │       │   └── utils/
+    │       │       ├── index.ts          # Utility exports
+    │       │       ├── text-decoding.ts  # Encoding detection
+    │       │       ├── hash-utils.ts     # Cache key generation
+    │       │       └── structural-analysis.ts # Deep structure analysis
+    │       └── semantics/
+    │           ├── semantic-policies.ts  # Tool/resource policies
+    │           └── semantic-quotas.ts    # Quota management
     └── utils/
         ├── validation-pipeline.ts        # Multi-layer orchestration
-        ├── security-logger.ts            # Logging system
+        ├── security-logger.ts            # Security event logging
         ├── error-sanitizer.ts            # Safe error responses
         ├── request-normalizer.ts         # Request normalization
+        ├── response-validator.ts         # Response validation
         └── tool-registry.ts              # Tool management
 
 cookbook/                                 # Example MCP servers
 ├── http-server/                          # HTTP transport example
-├── multi-endpoint-server/                # Multi-endpoint example
+├── multi-endpoint-server/                # Multi-endpoint routing
 ├── image-gen-server/                     # Image generation APIs
-├── kenpom-server/                        # Sports analytics
-├── api-wrapper-server/                   # Safe API wrapper
+├── kenpom-server/                        # Sports analytics API
+├── nba-server/                           # NBA statistics API
+├── api-wrapper-server/                   # Safe external API wrapper
 ├── database-server/                      # SQL injection prevention
 ├── filesystem-server/                    # Path traversal prevention
 ├── cli-wrapper-server/                   # Command injection prevention
-├── monitoring-server/                    # Security metrics/alerts
+├── monitoring-server/                    # Security metrics & alerts
 ├── transaction-server/                   # State machine workflows
 └── advanced-validation-server/           # Advanced security demos
 ```
