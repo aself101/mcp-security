@@ -1,3 +1,9 @@
+## [0.9.2](https://github.com/aself101/mcp-secure-server/compare/v0.9.1...v0.9.2) (2025-12-20)
+
+### Bug Fixes
+
+* **npm:** add publishConfig with public access ([0d4db2c](https://github.com/aself101/mcp-secure-server/commit/0d4db2c26e3ea897d8b5859f13e626833ee09de8))
+
 ## [0.9.1](https://github.com/aself101/mcp-secure-server/compare/v0.9.0...v0.9.1) (2025-12-20)
 
 ### Bug Fixes
