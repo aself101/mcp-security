@@ -1,3 +1,9 @@
+## [0.9.3](https://github.com/aself101/mcp-secure-server/compare/v0.9.2...v0.9.3) (2025-12-20)
+
+### Bug Fixes
+
+* use scoped package name @okstory/mcp-secure-server ([8ecc472](https://github.com/aself101/mcp-secure-server/commit/8ecc472ed4dbe5b452c677fefe31741b2ba1214d))
+
 ## [0.9.2](https://github.com/aself101/mcp-secure-server/compare/v0.9.1...v0.9.2) (2025-12-20)
 
 ### Bug Fixes

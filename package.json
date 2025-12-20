@@ -1,6 +1,6 @@
 {
   "name": "@okstory/mcp-secure-server",
-  "version": "0.9.2",
+  "version": "0.9.3",
   "description": "MCP Security - Universal security-by-default middleware for MCP servers",
   "type": "module",
   "main": "./dist/index.js",
