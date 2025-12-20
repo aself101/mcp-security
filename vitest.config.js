@@ -6,6 +6,11 @@ export default defineConfig({
     globals: true,
     environment: 'node',
     setupFiles: ['./test/setup/global-setup.js'],
+    exclude: [
+      '**/node_modules/**',
+      '**/dist/**',
+      'cookbook/**'
+    ],
     coverage: {
       provider: 'v8',
       reporter: ['text', 'json', 'html'],
