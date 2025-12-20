@@ -1,3 +1,9 @@
+## [0.9.2](https://github.com/aself101/mcp-secure-server/compare/v0.9.1...v0.9.2) (2025-12-20)
+
+### Bug Fixes
+
+* trigger npm publish retry ([3616a75](https://github.com/aself101/mcp-secure-server/commit/3616a7558642865e63d4768f3a73bd1d598ed451))
+
 ## [0.9.1](https://github.com/aself101/mcp-secure-server/compare/v0.9.0...v0.9.1) (2025-12-20)
 
 ### Bug Fixes
