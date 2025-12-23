@@ -1,7 +1,7 @@
 {
   "name": "mcp-secure-server",
   "version": "1.0.1",
-  "description": "MCP Security - Universal security-by-default middleware for MCP servers",
+  "description": "Secure-by-default MCP server with 5-layer validation for defense-in-depth protection",
   "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/types/index.d.ts",
@@ -77,6 +77,6 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/aself101/mcp-secure-server"
+    "url": "git+https://github.com/aself101/mcp-secure-server.git"
   }
 }
