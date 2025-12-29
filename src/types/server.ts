@@ -37,6 +37,8 @@ export interface SecureMcpServerOptions {
   server?: Record<string, unknown>;
   /** Maximum message size in bytes */
   maxMessageSize?: number;
+  /** Maximum parameter count (recursive key count) */
+  maxParamCount?: number;
   /** Rate limit per minute */
   maxRequestsPerMinute?: number;
   /** Rate limit per hour */

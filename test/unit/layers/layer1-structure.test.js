@@ -169,14 +169,17 @@ describe('Structure Validation Layer', () => {
     });
 
     it('should limit parameter count', async () => {
+      // Use a layer with explicit low limit for this test
+      const strictLayer = new StructureValidationLayer({ maxParamCount: 20 });
+
       const tooManyParams = {};
       for (let i = 0; i < 25; i++) {
         tooManyParams[`param${i}`] = 'value';
       }
-      
+
       const invalidMessage = createTestMessage({ params: tooManyParams });
-      const result = await layer.validate(invalidMessage, {});
-      
+      const result = await strictLayer.validate(invalidMessage, {});
+
       expect(result.passed).toBe(false);
       expect(result.reason).toContain('Too many parameters');
     });

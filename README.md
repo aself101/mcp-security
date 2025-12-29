@@ -430,6 +430,7 @@ import { SecureMcpServer, SecurityOptions } from 'mcp-secure-server';
 
 const options: SecurityOptions = {
   maxMessageSize: 50000,
+  maxParamCount: 100,           // Recursive key count limit
   maxRequestsPerMinute: 30,
   enableLogging: true,
   contextual: {

@@ -132,7 +132,7 @@ class SecureMcpServer {
     const layers: ValidationLayerInterface[] = [
       new StructureValidationLayer({
         maxMessageSize: options.maxMessageSize ?? LIMITS.MESSAGE_SIZE_MAX,
-        maxParamCount: LIMITS.PARAM_COUNT_MAX,
+        maxParamCount: options.maxParamCount ?? LIMITS.PARAM_COUNT_MAX,
         maxStringLength: LIMITS.STRING_LENGTH_MAX
       }),
       new ContentValidationLayer(),

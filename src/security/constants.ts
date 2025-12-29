@@ -8,8 +8,8 @@ export const LIMITS = {
   MESSAGE_SIZE_MAX: 50_000,
   /** Minimum valid message size in bytes */
   MESSAGE_SIZE_MIN: 10,
-  /** Maximum number of parameters */
-  PARAM_COUNT_MAX: 20,
+  /** Maximum number of parameters (recursive key count) */
+  PARAM_COUNT_MAX: 100,
   /** Maximum string parameter length */
   STRING_LENGTH_MAX: 5_000,
   /** Maximum method name length */
