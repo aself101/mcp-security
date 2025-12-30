@@ -36,6 +36,8 @@ export interface ContentLayerOptions extends ValidationLayerOptions {
   cacheMaxSize?: number;
   debugMode?: boolean;
   maxInputSize?: number;
+  /** Maximum recursive parameter count (default: Infinity - no limit) */
+  maxParamCount?: number;
 }
 
 /** Validator result from layer2-validators */
@@ -59,6 +61,7 @@ export default class ContentValidationLayer extends ValidationLayer {
   private processedContentCache: Map<string, string>;
   private cacheMaxSize: number;
   private maxInputSize: number;
+  private maxParamCount: number;
   protected override debugMode: boolean;
 
   constructor(options: ContentLayerOptions = {}) {
@@ -67,6 +70,7 @@ export default class ContentValidationLayer extends ValidationLayer {
     this.processedContentCache = new Map();
     this.cacheMaxSize = options.cacheMaxSize ?? 1000;
     this.maxInputSize = options.maxInputSize ?? MAX_CONTENT_INPUT_SIZE;
+    this.maxParamCount = options.maxParamCount ?? Infinity;
     this.debugMode = options.debugMode ?? false;
 
     this.logDebug('Enhanced Content Validation Layer initialized with security hardening');
@@ -202,7 +206,7 @@ export default class ContentValidationLayer extends ValidationLayer {
       );
     }
 
-    const paramResult = checkParams(message);
+    const paramResult = checkParams(message, this.maxParamCount);
     if (!paramResult.passed) return this.wrapResult(paramResult);
 
     const contextResult = checkContext(message, context);

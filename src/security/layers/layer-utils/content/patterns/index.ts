@@ -43,16 +43,20 @@ export interface AttackConfig {
   confidence: number;
 }
 
+/** Sensitive file patterns that require path context to trigger */
+export const sensitiveFileCategories: readonly AttackPattern[][] = [
+  ATTACK_PATTERNS.pathTraversal.sensitiveFiles,
+  ATTACK_PATTERNS.pathTraversal.unixSystemFiles,
+  ATTACK_PATTERNS.pathTraversal.macosSystemFiles,
+  ATTACK_PATTERNS.pathTraversal.windowsAbsolutePaths,
+  ATTACK_PATTERNS.pathTraversal.windowsSystemFiles
+];
+
 export const attackConfigs: readonly AttackConfig[] = [
   {
-    name: 'File access pattern',
+    name: 'Path traversal',
     categories: [
-      ATTACK_PATTERNS.pathTraversal.patterns,
-      ATTACK_PATTERNS.pathTraversal.sensitiveFiles,
-      ATTACK_PATTERNS.pathTraversal.unixSystemFiles,
-      ATTACK_PATTERNS.pathTraversal.macosSystemFiles,
-      ATTACK_PATTERNS.pathTraversal.windowsAbsolutePaths,
-      ATTACK_PATTERNS.pathTraversal.windowsSystemFiles
+      ATTACK_PATTERNS.pathTraversal.patterns
     ],
     violationType: 'PATH_TRAVERSAL',
     confidence: 0.9

@@ -158,7 +158,7 @@ Validates the fundamental structure of incoming JSON-RPC messages.
 ```typescript
 {
   maxMessageSize: 50000,      // Maximum message size in bytes
-  maxParamCount: 100,         // Maximum parameter count
+  maxParamCount: 100,         // Maximum recursive parameter count (set to Infinity to disable)
   maxMethodLength: 256        // Maximum method name length
 }
 ```
@@ -430,7 +430,7 @@ import { SecureMcpServer, SecurityOptions } from 'mcp-secure-server';
 
 const options: SecurityOptions = {
   maxMessageSize: 50000,
-  maxParamCount: 100,           // Recursive key count limit
+  maxParamCount: 100,           // Recursive key count limit (Infinity to disable)
   maxRequestsPerMinute: 30,
   enableLogging: true,
   contextual: {
@@ -484,10 +484,10 @@ const server = new SecureMcpServer(
   { name: 'my-server', version: '1.0.0' },
   {
     // ═══════════════════════════════════════════
-    // Layer 1 - Structure Validation
+    // Layer 1 & 2 - Structure & Content Validation
     // ═══════════════════════════════════════════
     maxMessageSize: 50000,        // Max message size (bytes)
-    maxParamCount: 100,           // Max parameters per request
+    maxParamCount: 100,           // Max recursive parameters (Infinity to disable)
     maxMethodLength: 256,         // Max method name length
 
     // ═══════════════════════════════════════════

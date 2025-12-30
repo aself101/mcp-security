@@ -114,8 +114,10 @@ export function validateEncodingConsistency(content: string): DataValidationResu
 
 /**
  * Parameter validation
+ * @param message - The message to validate
+ * @param maxParamCount - Maximum allowed recursive parameter count (default: Infinity - no limit)
  */
-export function validateParameters(message: unknown): DataValidationResult {
+export function validateParameters(message: unknown, maxParamCount: number = Infinity): DataValidationResult {
   if (message === null || message === undefined || typeof message !== 'object') {
     return {
       passed: false,
@@ -161,14 +163,17 @@ export function validateParameters(message: unknown): DataValidationResult {
     };
   }
 
-  const paramCount = countParameters(msg.params);
-  if (paramCount > 100) {
-    return {
-      passed: false,
-      reason: `Too many parameters: ${paramCount}`,
-      severity: 'MEDIUM',
-      violationType: 'EXCESSIVE_PARAM_COUNT'
-    };
+  // Only check parameter count if a finite limit is set
+  if (maxParamCount !== Infinity) {
+    const paramCount = countParameters(msg.params);
+    if (paramCount > maxParamCount) {
+      return {
+        passed: false,
+        reason: `Too many parameters: ${paramCount}`,
+        severity: 'MEDIUM',
+        violationType: 'EXCESSIVE_PARAM_COUNT'
+      };
+    }
   }
 
   return { passed: true };

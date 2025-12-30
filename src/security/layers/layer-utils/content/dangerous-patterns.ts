@@ -7,6 +7,7 @@
 export {
   ATTACK_PATTERNS,
   attackConfigs,
+  sensitiveFileCategories,
   getPatternsByType,
   getPatternsBySeverity,
   getAllPatterns

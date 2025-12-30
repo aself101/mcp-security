@@ -51,6 +51,57 @@ describe('Content Validation Layer', () => {
     });
   });
 
+  describe('Context-Aware Sensitive File Detection', () => {
+    it('should allow config.json without path context', async () => {
+      // Just mentioning "tsconfig.json" or "config.json" without path traversal context should be allowed
+      const message = createToolCallMessage({ file_path: 'tsconfig.json' });
+      const result = await layer.validate(message, {});
+
+      expect(result.passed).toBe(true);
+    });
+
+    it('should allow multiple config file references without path context', async () => {
+      // Validation tracker scenario: file paths as data, not as access attempts
+      const message = createToolCallMessage({
+        recommendations: [
+          { file_path: 'tsconfig.json', title: 'Fix types' },
+          { file_path: 'eslint.config.json', title: 'Fix lint' },
+          { file_path: 'package.json', title: 'Update deps' }
+        ]
+      });
+      const result = await layer.validate(message, {});
+
+      expect(result.passed).toBe(true);
+    });
+
+    it('should block config.json with path traversal context', async () => {
+      // This is an actual attack: traversing to access config.json
+      const message = createToolCallMessage({ path: '../../../config.json' });
+      const result = await layer.validate(message, {});
+
+      expect(result.passed).toBe(false);
+      expect(result.violationType).toBe('PATH_TRAVERSAL');
+    });
+
+    it('should block sensitive files with absolute path context', async () => {
+      // Attempting to access /etc/passwd is clearly an attack
+      const message = createToolCallMessage({ file: '/etc/passwd' });
+      const result = await layer.validate(message, {});
+
+      expect(result.passed).toBe(false);
+      expect(result.violationType).toBe('PATH_TRAVERSAL');
+    });
+
+    it('should block sensitive files with file:// protocol', async () => {
+      const message = createToolCallMessage({ url: 'file:///etc/passwd' });
+      const result = await layer.validate(message, {});
+
+      expect(result.passed).toBe(false);
+      // May be detected as SSRF (file:// scheme) or PATH_TRAVERSAL
+      expect(['PATH_TRAVERSAL', 'SSRF_ATTEMPT']).toContain(result.violationType);
+    });
+  });
+
   describe('SQL Injection Detection', () => {
     it('should detect basic SQL injection', async () => {
       const message = createToolCallMessage({ query: "'; DROP TABLE users; --" });
@@ -289,8 +340,8 @@ describe('Content Validation Layer', () => {
       const result = await layer.validate(message, {});
 
       expect(result.passed).toBe(false);
-      // May detect path traversal first due to /etc/passwd
-      expect(['XML_ENTITY_ATTACK', 'PATH_TRAVERSAL']).toContain(result.violationType);
+      // May detect SSRF (file:// scheme), path traversal (/etc/passwd), or XML entity attack
+      expect(['XML_ENTITY_ATTACK', 'PATH_TRAVERSAL', 'SSRF_ATTEMPT']).toContain(result.violationType);
     });
 
     it('should detect Billion Laughs attack', async () => {

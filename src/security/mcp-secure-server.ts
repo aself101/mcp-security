@@ -135,7 +135,9 @@ class SecureMcpServer {
         maxParamCount: options.maxParamCount ?? LIMITS.PARAM_COUNT_MAX,
         maxStringLength: LIMITS.STRING_LENGTH_MAX
       }),
-      new ContentValidationLayer(),
+      new ContentValidationLayer({
+        maxParamCount: options.maxParamCount ?? LIMITS.PARAM_COUNT_MAX
+      }),
       new BehaviorValidationLayer({
         requestsPerMinute: options.maxRequestsPerMinute ?? RATE_LIMITS.REQUESTS_PER_MINUTE,
         requestsPerHour: options.maxRequestsPerHour ?? RATE_LIMITS.REQUESTS_PER_HOUR,

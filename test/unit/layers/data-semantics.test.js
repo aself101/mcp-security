@@ -179,23 +179,36 @@ describe('Data Semantics Validation', () => {
             expect(result.violationType).toBe('OVERSIZED_PARAMS');
         });
 
-        it('should detect excessive parameter count (>100)', () => {
+        it('should detect excessive parameter count when limit is set', () => {
             const params = {};
             for (let i = 0; i < 150; i++) {
                 params[`param${i}`] = i;
             }
             const message = { method: 'test', params };
-            const result = validateParameters(message);
+            // Pass explicit limit of 100
+            const result = validateParameters(message, 100);
             expect(result.passed).toBe(false);
             expect(result.violationType).toBe('EXCESSIVE_PARAM_COUNT');
         });
 
-        it('should pass for acceptable parameter count (<=100)', () => {
+        it('should pass for acceptable parameter count when under limit', () => {
             const params = {};
             for (let i = 0; i < 50; i++) {
                 params[`param${i}`] = i;
             }
             const message = { method: 'test', params };
+            // Pass explicit limit of 100
+            const result = validateParameters(message, 100);
+            expect(result.passed).toBe(true);
+        });
+
+        it('should skip parameter count check when limit is Infinity', () => {
+            const params = {};
+            for (let i = 0; i < 500; i++) {
+                params[`param${i}`] = i;
+            }
+            const message = { method: 'test', params };
+            // Default limit is Infinity - should pass
             const result = validateParameters(message);
             expect(result.passed).toBe(true);
         });
