@@ -423,6 +423,27 @@ describe('Content Validation Layer', () => {
 
       expect(result.passed).toBe(true);
     });
+
+    it('should allow "history" in documentation text', async () => {
+      // This was triggering false positives for command injection
+      const message = createToolCallMessage({
+        summary: 'No version history documented. Check the release history for changes.',
+        description: 'The version history shows the project evolution over time.'
+      });
+      const result = await layer.validate(message, {});
+
+      expect(result.passed).toBe(true);
+    });
+
+    it('should block actual shell history access commands', async () => {
+      const message = createToolCallMessage({
+        command: 'history -c && rm ~/.bash_history'
+      });
+      const result = await layer.validate(message, {});
+
+      expect(result.passed).toBe(false);
+      expect(result.violationType).toBe('COMMAND_INJECTION');
+    });
   });
 });
 

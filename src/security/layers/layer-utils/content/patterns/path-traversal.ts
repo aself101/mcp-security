@@ -135,7 +135,9 @@ export const command = {
     { pattern: /\bid\s*(?:[;&|]|$)/gi, name: 'User ID Info', severity: 'MEDIUM' },
     { pattern: /\buname\s+/gi, name: 'System Info', severity: 'MEDIUM' },
     { pattern: /\benv\s*/gi, name: 'Environment Variables', severity: 'HIGH' },
-    { pattern: /\bhistory\s*/gi, name: 'Command History', severity: 'MEDIUM' }
+    { pattern: /\bhistory\s+(?:-[a-zA-Z]|[0-9]|\|)/gi, name: 'Command History Access', severity: 'MEDIUM' },
+    { pattern: /!\s*history/gi, name: 'History Shell Expansion', severity: 'MEDIUM' },
+    { pattern: /\.(?:bash|zsh|sh)_history/gi, name: 'Shell History File', severity: 'HIGH' }
   ]
 } as const satisfies Record<string, AttackPattern[]>;
 
