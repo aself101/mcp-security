@@ -4,7 +4,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Node.js](https://img.shields.io/badge/node-%3E%3D18.0.0-brightgreen)](https://nodejs.org)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.0+-blue.svg)](https://www.typescriptlang.org/)
-[![Tests](https://img.shields.io/badge/tests-1109%20passing-brightgreen)](test/)
+[![Tests](https://img.shields.io/badge/tests-842%20passing-brightgreen)](test/)
 [![Coverage](https://img.shields.io/badge/coverage-86%25-brightgreen)](test/)
 
 A secure-by-default MCP server built on the official SDK with 5-layer validation. Provides defense-in-depth against traditional attacks and AI-driven threats.
@@ -1210,26 +1210,7 @@ MIT License - see [LICENSE](LICENSE) file for details.
 
 ## Changelog
 
-### v0.9.0 (Current)
-- **Full TypeScript rewrite** - Complete type safety with strict mode
-- **Zero `any` usage** - Type guards for all dynamic data
-- **1066 tests** - Up from 707, includes extended chaining rules tests
-- **Type exports** - All types available for consumers
-- Type guards: `isSeverity()`, `isViolationType()`, `isError()`, `getErrorMessage()`
-
-### v0.8.0
-- **Layer 5 enabled by default** - Contextual validation in standard pipeline
-- Domain restrictions, OAuth validation, response filtering
-- Consolidated into single `SecureMcpServer` class
-- Logging opt-in (quiet by default)
-- 488 tests passing
-
-### v0.7.1
-- SSRF protection with cloud metadata blocking
-- Deserialization attack detection
-- CSV injection and LOLBins detection
-- GraphQL introspection blocking
-- 450 tests passing
+See [CHANGELOG.md](CHANGELOG.md) for version history and release notes.
 
 ---
 
