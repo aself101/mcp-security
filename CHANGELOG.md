@@ -1,3 +1,20 @@
+## [1.1.0](https://github.com/aself101/mcp-secure-server/compare/v1.0.1...v1.1.0) (2026-01-02)
+
+### Features
+
+* add configurable maxParamCount option ([e913eb0](https://github.com/aself101/mcp-secure-server/commit/e913eb0869a9de5e05724abc2a8c5adfdb8ba3de))
+* add configurable maxParamCount option ([8209f39](https://github.com/aself101/mcp-secure-server/commit/8209f3985752a4b5589e079880e8826617cf6ba2))
+
+### Bug Fixes
+
+* **security:** prevent false positives on "history" in documentation text ([2b398fd](https://github.com/aself101/mcp-secure-server/commit/2b398fdc591c99f99da011fdaa339f60afa2952c))
+* **security:** prevent false positives on file://, markdown pipes, and JSON newlines ([96933e1](https://github.com/aself101/mcp-secure-server/commit/96933e1b25f6370515e048defbc942ca49c43916)), closes [#759](https://github.com/aself101/mcp-secure-server/issues/759) [#760](https://github.com/aself101/mcp-secure-server/issues/760) [#761](https://github.com/aself101/mcp-secure-server/issues/761)
+
+### Documentation
+
+* **package:** update description to reflect current architecture ([9cc92c4](https://github.com/aself101/mcp-secure-server/commit/9cc92c4dd9f7d02b079bb3553caa6e67aaaafe98))
+* update test count badge to 842 passing ([a10c4ab](https://github.com/aself101/mcp-secure-server/commit/a10c4abcaf2e21c22700947c07751cce0d7c8c75))
+
 ## [1.0.1](https://github.com/aself101/mcp-secure-server/compare/v1.0.0...v1.0.1) (2025-12-20)
 
 ### Reverts
