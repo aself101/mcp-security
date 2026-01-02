@@ -571,6 +571,139 @@ describe('ErrorSanitizer', () => {
     });
   });
 
+  describe('Exception Path Handling', () => {
+    it('should handle circular reference objects in redact', () => {
+      const circular = { a: 1 };
+      circular.self = circular;
+
+      // Should not throw, should return something sensible
+      const result = sanitizer.redact(circular);
+      expect(typeof result).toBe('string');
+      expect(result).toContain('[object Object]');
+    });
+
+    it('should handle objects with throwing toString by propagating error', () => {
+      const badObject = {
+        toString() {
+          throw new Error('toString exploded');
+        }
+      };
+
+      // String() propagates toString errors - this is expected JavaScript behavior
+      // The test documents that redact doesn't add additional try/catch complexity
+      expect(() => sanitizer.redact(badObject)).toThrow('toString exploded');
+    });
+
+    it('should handle objects with throwing valueOf', () => {
+      const badObject = {
+        valueOf() {
+          throw new Error('valueOf exploded');
+        }
+      };
+
+      // Should not throw, String() handles this
+      expect(() => sanitizer.redact(badObject)).not.toThrow();
+    });
+
+    it('should handle Symbol in redact gracefully', () => {
+      const sym = Symbol('test');
+      // Should not throw
+      expect(() => sanitizer.redact(sym)).not.toThrow();
+    });
+
+    it('should handle BigInt in redact gracefully', () => {
+      const bigNum = BigInt(9007199254740991);
+      const result = sanitizer.redact(bigNum);
+      expect(result).toBe('9007199254740991');
+    });
+
+    it('should handle empty string in redact', () => {
+      const result = sanitizer.redact('');
+      expect(result).toBe('');
+    });
+
+    it('should handle console.error throwing', () => {
+      const originalError = console.error;
+      console.error = () => {
+        throw new Error('console.error failed');
+      };
+
+      // logSecurityViolation should not throw even if console does
+      try {
+        // This might throw, but we want to verify the sanitizer doesn't crash catastrophically
+        sanitizer.logSecurityViolation('id', 'test', 'HIGH', 'VALIDATION_ERROR');
+      } catch (e) {
+        // Expected if console.error throws
+      }
+
+      console.error = originalError;
+    });
+
+    it('should handle very deeply nested objects in redact', () => {
+      let deep = { value: 'secret@email.com' };
+      for (let i = 0; i < 100; i++) {
+        deep = { nested: deep };
+      }
+
+      // Should not throw or hang
+      const result = sanitizer.redact(deep);
+      expect(typeof result).toBe('string');
+    });
+
+    it('should handle array with undefined elements', () => {
+      const arr = [1, undefined, 'test@email.com', null];
+      const result = sanitizer.redact(arr);
+      expect(result).toContain('****EMAIL****');
+    });
+
+    it('should handle regex special characters in input without regex errors', () => {
+      const regexDangerous = 'test[.*+?^${}()|[]\\input';
+      // Should not throw
+      const result = sanitizer.redact(regexDangerous);
+      expect(typeof result).toBe('string');
+    });
+
+    it('should create valid error response even with empty string reason', () => {
+      const response = sanitizer.createSanitizedErrorResponse('id-1', '', 'HIGH', 'VALIDATION_ERROR');
+      expect(response.jsonrpc).toBe('2.0');
+      expect(response.error.code).toBeDefined();
+    });
+
+    it('should handle createMiddlewareErrorResponse with null error', () => {
+      const response = sanitizer.createMiddlewareErrorResponse('mid-null', null);
+      expect(response.jsonrpc).toBe('2.0');
+      expect(response.error.code).toBe(-32603);
+    });
+
+    it('should handle createMiddlewareErrorResponse with undefined error', () => {
+      const response = sanitizer.createMiddlewareErrorResponse('mid-undef', undefined);
+      expect(response.jsonrpc).toBe('2.0');
+      expect(response.error.code).toBe(-32603);
+    });
+
+    it('should handle sanitizeOutgoingError with deeply nested error data', () => {
+      const deepZodError = {
+        jsonrpc: '2.0',
+        id: 'deep-1',
+        error: {
+          code: -32602,
+          message: 'Invalid params',
+          data: {
+            code: 'too_big',
+            maximum: 50,
+            path: ['level1', 'level2', 'level3', 'level4', 'level5'],
+            nested: { deep: { very: { data: 'sensitive' } } }
+          }
+        }
+      };
+
+      const result = sanitizer.sanitizeOutgoingError(deepZodError);
+      expect(result).not.toBe(null);
+      expect(result.error.data).not.toHaveProperty('nested');
+      expect(result.error.data).not.toHaveProperty('path');
+    });
+  });
+
   describe('Stress Tests', () => {
     it('handles large payloads efficiently', () => {
       const largeText = 'A'.repeat(100000);

@@ -2,6 +2,28 @@
  * HTTP server with security validation for MCP requests.
  * Uses node:http directly for zero external dependencies.
  *
+ * ## HTTPS in Production
+ *
+ * This module provides HTTP transport. For production deployments, always use HTTPS:
+ *
+ * **Option 1: Reverse Proxy (Recommended)**
+ * Deploy behind nginx, Cloudflare, or a load balancer that terminates TLS.
+ * This is the most common production setup and handles certificate management.
+ *
+ * **Option 2: Node.js HTTPS**
+ * Use the handler with node:https directly:
+ * ```typescript
+ * import { createServer } from 'node:https';
+ * import { readFileSync } from 'node:fs';
+ *
+ * const handler = createSecureHttpHandler(server);
+ * const httpsServer = createServer({
+ *   key: readFileSync('server.key'),
+ *   cert: readFileSync('server.cert')
+ * }, handler);
+ * httpsServer.listen(443);
+ * ```
+ *
  * ## Transport Lifecycle
  *
  * Each handler maintains a singleton transport instance per SecureMcpServer.

@@ -1,6 +1,6 @@
 {
   "name": "mcp-secure-server",
-  "version": "1.1.0",
+  "version": "0.0.2-security",
   "description": "Secure-by-default MCP server with 5-layer validation for defense-in-depth protection",
   "type": "module",
   "main": "./dist/index.js",
@@ -40,13 +40,14 @@
     "framework",
     "middleware"
   ],
-  "author": "MCP Security",
+  "author": "aself101",
   "license": "MIT",
   "engines": {
     "node": ">=18.0.0"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.24.3",
+    "winston": "^3.10.0",
     "zod": "^4.1.13"
   },
   "devDependencies": {
@@ -63,7 +64,6 @@
     "tsx": "^4.21.0",
     "typescript": "^5.9.3",
     "vitest": "^3.2.4",
-    "winston": "^3.10.0",
     "ws": "^8.18.3"
   },
   "files": [

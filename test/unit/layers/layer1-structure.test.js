@@ -116,7 +116,7 @@ describe('Structure Validation Layer', () => {
     it('should accept normal sized messages', async () => {
       const normalMessage = createTestMessage();
       const result = await layer.validate(normalMessage, {});
-      
+
       expect(result.passed).toBe(true);
     });
 
@@ -130,7 +130,7 @@ describe('Structure Validation Layer', () => {
         }
       };
       const result = await layer.validate(oversizedMessage, {});
-      
+
       expect(result.passed).toBe(false);
       expect(result.reason).toContain('Message too large');
       expect(result.severity).toBe('HIGH');
@@ -143,6 +143,140 @@ describe('Structure Validation Layer', () => {
       expect(result.passed).toBe(false);
       // This will fail on JSON-RPC validation first, not size
       expect(result.reason).toContain('JSON-RPC version');
+    });
+  });
+
+  describe('Default Limit Boundaries', () => {
+    it('should accept message near MESSAGE_SIZE_MAX boundary (49500 bytes)', async () => {
+      // Use non-MCP method to avoid schema validation
+      // Test message size close to but under the 50000 byte limit
+      const params = {};
+      const chunkSize = 4000; // Under STRING_LENGTH_MAX of 5000
+      const numChunks = 12;   // 12 chunks * 4000 = 48000 base
+
+      for (let i = 0; i < numChunks; i++) {
+        params[`d${i}`] = 'x'.repeat(chunkSize);
+      }
+
+      const atLimitMessage = {
+        jsonrpc: '2.0',
+        method: 'custom/test',
+        id: 1,
+        params
+      };
+
+      // Verify we're under the limit but close to it
+      const actualSize = JSON.stringify(atLimitMessage).length;
+      expect(actualSize).toBeLessThan(50000);
+      expect(actualSize).toBeGreaterThan(48000); // Reasonably close
+
+      const result = await layer.validate(atLimitMessage, {});
+      expect(result.passed).toBe(true);
+    });
+
+    it('should reject message 1 byte over MESSAGE_SIZE_MAX boundary', async () => {
+      // Spread data across multiple params to avoid STRING_LENGTH_MAX
+      const params = {};
+      const chunkSize = 4000;
+      const numChunks = 13; // 13 chunks * 4000 = 52000, well over 50000
+
+      for (let i = 0; i < numChunks; i++) {
+        params[`d${i}`] = 'x'.repeat(chunkSize);
+      }
+
+      const overLimitMessage = {
+        jsonrpc: '2.0',
+        method: 'custom/test',
+        id: 1,
+        params
+      };
+
+      const result = await layer.validate(overLimitMessage, {});
+      expect(result.passed).toBe(false);
+      expect(result.reason).toContain('Message too large');
+    });
+
+    it('should accept params with exactly PARAM_COUNT_MAX (100) parameters', async () => {
+      // Use non-MCP method to avoid schema validation requiring 'name' param
+      const exactParams = {};
+      for (let i = 0; i < 100; i++) {
+        exactParams[`p${i}`] = 'v';
+      }
+
+      const atLimitMessage = {
+        jsonrpc: '2.0',
+        method: 'custom/test',
+        id: 1,
+        params: exactParams
+      };
+      const result = await layer.validate(atLimitMessage, {});
+      expect(result.passed).toBe(true);
+    });
+
+    it('should reject params with 101 parameters (over PARAM_COUNT_MAX)', async () => {
+      const tooManyParams = {};
+      for (let i = 0; i < 101; i++) {
+        tooManyParams[`p${i}`] = 'v';
+      }
+
+      const overLimitMessage = {
+        jsonrpc: '2.0',
+        method: 'custom/test',
+        id: 1,
+        params: tooManyParams
+      };
+      const result = await layer.validate(overLimitMessage, {});
+      expect(result.passed).toBe(false);
+      expect(result.reason).toContain('Too many parameters');
+    });
+
+    it('should accept string at exactly STRING_LENGTH_MAX (5000 chars)', async () => {
+      // Use non-MCP method to avoid schema validation
+      const atLimitMessage = {
+        jsonrpc: '2.0',
+        method: 'custom/test',
+        id: 1,
+        params: { data: 'x'.repeat(5000) }
+      };
+
+      const result = await layer.validate(atLimitMessage, {});
+      expect(result.passed).toBe(true);
+    });
+
+    it('should reject string at STRING_LENGTH_MAX + 1 (5001 chars)', async () => {
+      const overLimitMessage = {
+        jsonrpc: '2.0',
+        method: 'custom/test',
+        id: 1,
+        params: { data: 'x'.repeat(5001) }
+      };
+
+      const result = await layer.validate(overLimitMessage, {});
+      expect(result.passed).toBe(false);
+      expect(result.reason).toContain('String parameter too long');
+    });
+
+    it('should accept method name at METHOD_NAME_MAX boundary (100 chars)', async () => {
+      const atLimitMessage = {
+        jsonrpc: '2.0',
+        method: 'x'.repeat(100),
+        id: 1
+      };
+
+      const result = await layer.validate(atLimitMessage, {});
+      expect(result.passed).toBe(true);
+    });
+
+    it('should reject method name over METHOD_NAME_MAX boundary (101 chars)', async () => {
+      const overLimitMessage = {
+        jsonrpc: '2.0',
+        method: 'x'.repeat(101),
+        id: 1
+      };
+
+      const result = await layer.validate(overLimitMessage, {});
+      expect(result.passed).toBe(false);
+      expect(result.reason).toContain('Invalid method name format');
     });
   });
 

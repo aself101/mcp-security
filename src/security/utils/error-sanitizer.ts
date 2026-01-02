@@ -1,4 +1,3 @@
-/* eslint-disable no-useless-escape */
 /**
  * Error sanitization utilities to prevent information leakage.
  */
@@ -8,11 +7,15 @@ import type { Severity, ViolationType } from '../../types/index.js';
 
 /** Configuration options for ErrorSanitizer */
 export interface ErrorSanitizerOptions {
-  /** Enable detailed error messages (for development) */
+  /** Enable detailed error messages (for development only, default: false) */
   enableDetailedErrors?: boolean;
-  /** Maximum length for log entries */
+  /** Maximum length for log entries (default: 1000) */
   maxLogLength?: number;
-  /** Enable security event logging to console (default: true for HIGH/CRITICAL) */
+  /**
+   * Enable security event logging to console (default: true).
+   * When enabled, security violations are logged via console.error (HIGH/CRITICAL),
+   * console.warn (MEDIUM), or console.info (LOW). Set to false for silent operation.
+   */
   enableSecurityLogging?: boolean;
 }
 
@@ -122,20 +125,20 @@ export class ErrorSanitizer {
       .replace(/\beyJ[A-Za-z0-9+/=_-]+\.[A-Za-z0-9+/=_-]+\.[A-Za-z0-9+/=_-]*\b/g, '****JWT_TOKEN****')
 
       // Authorization headers
-      .replace(/Bearer\s+[A-Za-z0-9._\-]{10,}/gi, 'Bearer ****TOKEN****')
+      .replace(/Bearer\s+[A-Za-z0-9._-]{10,}/gi, 'Bearer ****TOKEN****')
       .replace(/Authorization:\s*Basic\s+[A-Za-z0-9+/=]+/gi, 'Authorization: Basic ****')
-      .replace(/Authorization:\s*Bearer\s+[A-Za-z0-9._\-]+/gi, 'Authorization: Bearer ****')
+      .replace(/Authorization:\s*Bearer\s+[A-Za-z0-9._-]+/gi, 'Authorization: Bearer ****')
 
       // Database connection strings
-      .replace(/\b\w+:\/\/[^:]+:[^@]+@[^\/\s]+(?:\/[^\s]*)?/g, '****DB_CONNECTION****')
+      .replace(/\b\w+:\/\/[^:]+:[^@]+@[^/\s]+(?:\/[^\s]*)?/g, '****DB_CONNECTION****')
 
       // Private keys
       .replace(/-----BEGIN [A-Z ]+-----[\s\S]*?-----END [A-Z ]+-----/g, '****PRIVATE_KEY****')
 
       // Common password patterns
-      .replace(/["\']?password["\']?\s*[:=]\s*["\'][^"']+["\']/gi, '"password": "****"')
-      .replace(/["\']?pass["\']?\s*[:=]\s*["\'][^"']+["\']/gi, '"pass": "****"')
-      .replace(/["\']?secret["\']?\s*[:=]\s*["\'][^"']+["\']/gi, '"secret": "****"');
+      .replace(/["']?password["']?\s*[:=]\s*["'][^"']+["']/gi, '"password": "****"')
+      .replace(/["']?pass["']?\s*[:=]\s*["'][^"']+["']/gi, '"pass": "****"')
+      .replace(/["']?secret["']?\s*[:=]\s*["'][^"']+["']/gi, '"secret": "****"');
   }
 
   redactPII(text: string): string {

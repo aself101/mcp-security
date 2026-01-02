@@ -18,6 +18,98 @@ describe('Behavior Validation Layer', () => {
     layer.cleanup?.();
   });
 
+  describe('Rate Limiting - Per Hour', () => {
+    it('should block requests exceeding per-hour limit', async () => {
+      // Use a small hourly limit for testing
+      const hourlyLayer = new BehaviorValidationLayer({
+        requestsPerMinute: 1000, // High enough not to interfere
+        requestsPerHour: 15,
+        burstThreshold: 100 // High enough not to interfere
+      });
+
+      const message = createTestMessage();
+
+      // Send requests up to the hourly limit
+      for (let i = 0; i < 15; i++) {
+        await hourlyLayer.validate(message, {});
+        vi.advanceTimersByTime(5000); // Space them out to avoid burst detection
+      }
+
+      // Next request should be blocked by hourly limit
+      const result = await hourlyLayer.validate(message, {});
+      expect(result.passed).toBe(false);
+      expect(result.reason).toMatch(/rate.*limit|hour/i);
+      expect(result.violationType).toBe('RATE_LIMIT_EXCEEDED');
+
+      hourlyLayer.cleanup?.();
+    });
+
+    it('should reset hourly limit after the hour window expires', async () => {
+      const hourlyLayer = new BehaviorValidationLayer({
+        requestsPerMinute: 1000,
+        requestsPerHour: 10,
+        burstThreshold: 100
+      });
+
+      const message = createTestMessage();
+
+      // Hit the hourly limit
+      for (let i = 0; i < 10; i++) {
+        await hourlyLayer.validate(message, {});
+        vi.advanceTimersByTime(1000);
+      }
+
+      // Verify blocked
+      let result = await hourlyLayer.validate(message, {});
+      expect(result.passed).toBe(false);
+
+      // Advance time past the hour window (1 hour + 1 second)
+      vi.advanceTimersByTime(3601000);
+
+      // Should be allowed again after window reset
+      result = await hourlyLayer.validate(message, {});
+      expect(result.passed).toBe(true);
+
+      hourlyLayer.cleanup?.();
+    });
+
+    it('should enforce hourly limit independently from minute limit', async () => {
+      const dualLimitLayer = new BehaviorValidationLayer({
+        requestsPerMinute: 5,
+        requestsPerHour: 8,
+        burstThreshold: 100
+      });
+
+      const message = createTestMessage();
+
+      // Hit minute limit (5 requests)
+      for (let i = 0; i < 5; i++) {
+        await dualLimitLayer.validate(message, {});
+      }
+
+      // Should be blocked by minute limit
+      let result = await dualLimitLayer.validate(message, {});
+      expect(result.passed).toBe(false);
+      expect(result.reason).toMatch(/minute/i);
+
+      // Advance past minute window
+      vi.advanceTimersByTime(61000);
+
+      // Make 3 more requests (total 8 for the hour)
+      for (let i = 0; i < 3; i++) {
+        const r = await dualLimitLayer.validate(message, {});
+        expect(r.passed).toBe(true);
+      }
+
+      // Should now be blocked by hourly limit
+      result = await dualLimitLayer.validate(message, {});
+      expect(result.passed).toBe(false);
+      expect(result.reason).toMatch(/hour/i);
+
+      dualLimitLayer.cleanup?.();
+    });
+  });
+
   describe('Rate Limiting - Per Minute', () => {
     it('should allow requests under the limit', async () => {
       const message = createTestMessage();

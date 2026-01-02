@@ -62,6 +62,33 @@ describe('SecureMcpServer', () => {
             );
             expect(serverWithLogging._securityLogger).not.toBe(null);
         });
+
+        it('throws helpful error when serverInfo is missing', () => {
+            expect(() => new SecureMcpServer()).toThrow('SecureMcpServer requires serverInfo as first argument');
+            expect(() => new SecureMcpServer()).toThrow('Example:');
+        });
+
+        it('throws helpful error when serverInfo is null', () => {
+            expect(() => new SecureMcpServer(null)).toThrow('SecureMcpServer requires serverInfo as first argument');
+        });
+
+        it('throws helpful error when serverInfo.name is missing', () => {
+            expect(() => new SecureMcpServer({ version: '1.0.0' })).toThrow('serverInfo.name is required');
+            expect(() => new SecureMcpServer({ version: '1.0.0' })).toThrow('Example:');
+        });
+
+        it('throws helpful error when serverInfo.name is empty', () => {
+            expect(() => new SecureMcpServer({ name: '', version: '1.0.0' })).toThrow('serverInfo.name is required');
+        });
+
+        it('throws helpful error when serverInfo.version is missing', () => {
+            expect(() => new SecureMcpServer({ name: 'test' })).toThrow('serverInfo.version is required');
+            expect(() => new SecureMcpServer({ name: 'test' })).toThrow('Example:');
+        });
+
+        it('throws helpful error when serverInfo.version is empty', () => {
+            expect(() => new SecureMcpServer({ name: 'test', version: '' })).toThrow('serverInfo.version is required');
+        });
     });
 
     describe('connect', () => {

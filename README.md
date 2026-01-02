@@ -36,6 +36,7 @@ server.tool('calculator', 'Basic calculator', {
   expression: z.string()
 }, async ({ expression }) => {
   // Security framework automatically blocks malicious inputs
+  // NOTE: eval() used for demo only - use a safe math parser in production
   return { content: [{ type: 'text', text: `Result: ${eval(expression)}` }] };
 });
 

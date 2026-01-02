@@ -88,6 +88,32 @@ class SecureMcpServer {
   private _requestIdByJsonrpcId: Map<string | number | null | undefined, number>;
 
   constructor(serverInfo: ServerInfo, options: SecureMcpServerOptions = {}) {
+    // Validate serverInfo - provide helpful error for common mistakes
+    if (!serverInfo || typeof serverInfo !== 'object') {
+      throw new Error(
+        'SecureMcpServer requires serverInfo as first argument.\n\n' +
+        'Example:\n' +
+        '  const server = new SecureMcpServer({ name: "my-server", version: "1.0.0" });\n\n' +
+        'See: https://github.com/aself101/mcp-secure-server#quick-start'
+      );
+    }
+    if (!serverInfo.name || typeof serverInfo.name !== 'string') {
+      throw new Error(
+        'serverInfo.name is required and must be a non-empty string.\n\n' +
+        'Example:\n' +
+        '  const server = new SecureMcpServer({ name: "my-server", version: "1.0.0" });\n\n' +
+        'See: https://github.com/aself101/mcp-secure-server#quick-start'
+      );
+    }
+    if (!serverInfo.version || typeof serverInfo.version !== 'string') {
+      throw new Error(
+        'serverInfo.version is required and must be a non-empty string.\n\n' +
+        'Example:\n' +
+        '  const server = new SecureMcpServer({ name: "my-server", version: "1.0.0" });\n\n' +
+        'See: https://github.com/aself101/mcp-secure-server#quick-start'
+      );
+    }
+
     this._serverInfo = serverInfo;
     this._options = {
       // Limits

@@ -12,16 +12,16 @@ import { ATTACK_PATTERNS, attackConfigs, sensitiveFileCategories } from '../laye
  * These patterns are designed to work on JSON-stringified content.
  */
 const PATH_CONTEXT_PATTERNS = [
-  /\.\.[\/\\]/,           // Path traversal: ../ or ..\
-  /["'][\/\\]/,           // Absolute path in JSON: "/" or "\" at start of value
-  /[\/\\]\.\.[\/\\]/,     // Mid-path traversal: /../
-  /[\/\\]etc[\/\\]/,      // Unix system path: /etc/
-  /[\/\\]proc[\/\\]/,     // Unix proc filesystem: /proc/
-  /[\/\\]var[\/\\]/,      // Unix var path: /var/
-  /[\/\\]home[\/\\]/,     // Unix home path: /home/
-  /[\/\\]usr[\/\\]/,      // Unix usr path: /usr/
-  /[a-zA-Z]:[\/\\]/,      // Windows absolute path: C:\ or C:/
-  /%2e%2e[%\/\\]/i,       // URL-encoded traversal
+  /\.\.[/\\]/,            // Path traversal: ../ or ..\
+  /["'][/\\]/,            // Absolute path in JSON: "/" or "\" at start of value
+  /[/\\]\.\.[/\\]/,       // Mid-path traversal: /../
+  /[/\\]etc[/\\]/,        // Unix system path: /etc/
+  /[/\\]proc[/\\]/,       // Unix proc filesystem: /proc/
+  /[/\\]var[/\\]/,        // Unix var path: /var/
+  /[/\\]home[/\\]/,       // Unix home path: /home/
+  /[/\\]usr[/\\]/,        // Unix usr path: /usr/
+  /[a-zA-Z]:[/\\]/,       // Windows absolute path: C:\ or C:/
+  /%2e%2e[%/\\]/i,        // URL-encoded traversal
   /%252e/i,               // Double-encoded dot
   /file:\/\//i,           // File protocol
   /\.\.%c0%af/i,          // UTF-8 overlong encoding
