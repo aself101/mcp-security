@@ -163,7 +163,7 @@ export const deserialization = {
   markers: [
     { pattern: /\brO0AB[A-Za-z0-9+/=]{10,}/, name: 'Java Serialized (Base64)', severity: 'CRITICAL' },
     { pattern: /\bO:\d+:"[A-Za-z0-9_\\]+"\s*:\d+:\{/, name: 'PHP Object Serialization', severity: 'HIGH' },
-    { pattern: /\bcos\\nsystem\\n|\bcposix\\nsystem\\n|(?:GLOBAL|REDUCE)\n/i, name: 'Python Pickle Primitives', severity: 'HIGH' },
+    { pattern: /\bcos\\nsystem\\n|\bcposix\\nsystem\\n|(?:GLOBAL|REDUCE)\\n/i, name: 'Python Pickle Primitives', severity: 'HIGH' },
     { pattern: /!!python\/object\/apply|!!js\/function/i, name: 'YAML Dangerous Tags', severity: 'HIGH' },
     { pattern: /\$\{jndi:(?:ldap|rmi|dns):\/\//i, name: 'JNDI/Log4Shell Probe', severity: 'CRITICAL' },
     { pattern: /\bAAEAAAD[0-9A-Za-z+/=]{16,}/, name: '.NET BinaryFormatter (Base64-like)', severity: 'CRITICAL' },

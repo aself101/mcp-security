@@ -92,7 +92,7 @@ export const command = {
     { pattern: /;\s*[a-zA-Z]/gi, name: 'Command Separator Injection', severity: 'HIGH' },
     { pattern: /&&\s*[a-zA-Z]/gi, name: 'AND Command Chain', severity: 'HIGH' },
     { pattern: /\|\|\s*[a-zA-Z]/gi, name: 'OR Command Chain', severity: 'HIGH' },
-    { pattern: /\|\s*[a-zA-Z]/gi, name: 'Pipe Command Chain', severity: 'MEDIUM' }
+    { pattern: /\|\s*(?:grep|sed|awk|cat|less|more|head|tail|sort|uniq|wc|xargs|tee|cut|tr|bash|sh|zsh|rm|mv|cp|chmod|chown|kill|ps|wget|curl|nc|ncat|python|perl|ruby|php|node)\b/gi, name: 'Pipe to Command', severity: 'MEDIUM' }
   ],
   networkOperations: [
     { pattern: /wget\s+http/gi, name: 'Wget Download', severity: 'HIGH' },
@@ -146,9 +146,6 @@ export const crlf = {
     { pattern: /%0d%0a/gi, name: 'URL-Encoded CRLF', severity: 'HIGH' },
     { pattern: /%0a/gi, name: 'URL-Encoded LF', severity: 'MEDIUM' },
     { pattern: /%0d/gi, name: 'URL-Encoded CR', severity: 'MEDIUM' },
-    { pattern: /\\r\\n/gi, name: 'Escaped CRLF', severity: 'HIGH' },
-    { pattern: /\\n/gi, name: 'Escaped LF', severity: 'MEDIUM' },
-    { pattern: /\\r/gi, name: 'Escaped CR', severity: 'MEDIUM' },
     { pattern: /\r\n/g, name: 'Literal CRLF', severity: 'HIGH' },
     { pattern: /\n.*(?:location|set-cookie|content-type):/gi, name: 'LF Header Injection', severity: 'MEDIUM' }
   ],

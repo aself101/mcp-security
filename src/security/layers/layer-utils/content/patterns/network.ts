@@ -45,7 +45,7 @@ export const ssrf = {
     { pattern: /https?:\/\/\[(?:::1|::ffff:127\.0\.0\.1|fe80::|fc00::)\](?:[:\/?]|$)/i, name: 'IPv6 Local Address', severity: 'HIGH' }
   ],
   dangerousSchemes: [
-    { pattern: /\bfile:\/\/[^\s]*/i, name: 'File URI Scheme', severity: 'CRITICAL' },
+    { pattern: /\bfile:\/\/[^\s]*(?:\/etc\/|\/proc\/|\/var\/|\/home\/|\/root\/|\.pem|\.key|\.ssh|passwd|shadow|\.env|\.git|\.aws|credentials)/i, name: 'File URI Sensitive Path', severity: 'CRITICAL' },
     { pattern: /\bftp:\/\/[^\s]*/i, name: 'FTP URI Scheme', severity: 'HIGH' },
     { pattern: /\bgopher:\/\/[^\s]*/i, name: 'Gopher URI Scheme', severity: 'HIGH' },
     { pattern: /\bdict:\/\/[^\s]*/i, name: 'Dict URI Scheme', severity: 'HIGH' },

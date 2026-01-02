@@ -435,6 +435,52 @@ describe('Content Validation Layer', () => {
       expect(result.passed).toBe(true);
     });
 
+    it('should allow escaped newlines in JSON text content', async () => {
+      const message = createToolCallMessage({
+        text: 'Hello\nWorld',
+        description: 'Line 1\nLine 2\nLine 3'
+      });
+      const result = await layer.validate(message, {});
+
+      expect(result.passed).toBe(true);
+    });
+
+    it('should allow multiline code strings', async () => {
+      const message = createToolCallMessage({
+        code: 'function hello() {\n  console.log("Hi");\n}'
+      });
+      const result = await layer.validate(message, {});
+
+      expect(result.passed).toBe(true);
+    });
+
+    it('should allow Windows line endings in text', async () => {
+      const message = createToolCallMessage({
+        windowsText: 'Line 1\r\nLine 2\r\nLine 3'
+      });
+      const result = await layer.validate(message, {});
+
+      expect(result.passed).toBe(true);
+    });
+
+    it('should allow file:// in documentation without path context', async () => {
+      const message = createToolCallMessage({
+        docs: 'Use file:///path/to/docs for local access'
+      });
+      const result = await layer.validate(message, {});
+
+      expect(result.passed).toBe(true);
+    });
+
+    it('should allow markdown tables with pipes', async () => {
+      const message = createToolCallMessage({
+        markdown: '| Header | Value |\n|--------|-------|\n| Name   | Test  |'
+      });
+      const result = await layer.validate(message, {});
+
+      expect(result.passed).toBe(true);
+    });
+
     it('should block actual shell history access commands', async () => {
       const message = createToolCallMessage({
         command: 'history -c && rm ~/.bash_history'
@@ -443,6 +489,36 @@ describe('Content Validation Layer', () => {
 
       expect(result.passed).toBe(false);
       expect(result.violationType).toBe('COMMAND_INJECTION');
+    });
+
+    it('should block CRLF with Set-Cookie header injection', async () => {
+      const message = createToolCallMessage({
+        header: 'X-Custom: value\r\nSet-Cookie: admin=true'
+      });
+      const result = await layer.validate(message, {});
+
+      expect(result.passed).toBe(false);
+      expect(result.violationType).toBe('CRLF_INJECTION');
+    });
+
+    it('should block URL-encoded CRLF injection', async () => {
+      const message = createToolCallMessage({
+        url: 'http://example.com/page%0d%0aSet-Cookie: evil=true'
+      });
+      const result = await layer.validate(message, {});
+
+      expect(result.passed).toBe(false);
+      expect(result.violationType).toBe('CRLF_INJECTION');
+    });
+
+    it('should block CRLF with Location header injection', async () => {
+      const message = createToolCallMessage({
+        redirect: 'innocent\r\nLocation: http://evil.com'
+      });
+      const result = await layer.validate(message, {});
+
+      expect(result.passed).toBe(false);
+      expect(result.violationType).toBe('CRLF_INJECTION');
     });
   });
 });
